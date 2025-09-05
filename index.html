@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EmmiDev Weather - Your Weather, Your World</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
+<link rel="apple-touch-icon" sizes="60x60" href="favicon/android-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="72x72" href="favicon/android-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="76x76" href="favicon/android-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="114x114" href="favicon/android-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="120x120" href="favicon/android-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="144x144" href="favicon/android-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="152x152" href="favicon/android-icon-144x144.png">
+<link rel="apple-touch-icon" sizes="180x180" href="favicon/android-icon-144x144.png">
+<link rel="icon" type="image/png" sizes="192x192"  href="favicon/android-icon-192x192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+<link rel="manifest" href="favicon/manifest.json">
+<meta name="msapplication-TileColor" content="#ffffff">
+<meta name="msapplication-TileImage" content="favicon/ms-icon-144x144.png">
+<meta name="theme-color" content="#ffffff">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <script src="script.js" defer></script>
+</head>
+<body>
+    <!-- Header with Navigation -->
+    <header>
+        <canvas class="header-canvas" id="weatherAnimation"></canvas>
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-cloud-sun"></i>
+                <span>EmmiDev Weather</span>
+            </div>
+            <nav>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#forecast">Forecast</a></li>
+                    <li><a href="#lifestyle">Lifestyle</a></li>
+                    <li><a href="#health">Health</a></li>
+                    <li><a href="#" id="premium-link" class="premium-icon"><i class="fas fa-crown"></i> Premium</a></li>
+                    <li><a href="#about">About</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="hero">
+            <h1>Your Weather, Your World</h1>
+            <p>Get hyperlocal weather forecasts, lifestyle recommendations, and health alerts tailored just for you - anywhere in the world.</p>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="citySearch" placeholder="Enter your city name">
+                <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Search</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Current Weather Section -->
+        <section id="current-weather">
+            <h2 class="section-title">Current Weather</h2>
+            <div class="loader" id="weatherLoader"></div>
+            <div class="error-message" id="weatherError"></div>
+            <div class="weather-cards" id="weatherCards">
+                <div class="weather-card">
+                    <div class="card-header">
+                        <h3>Detecting your location...</h3>
+                        <p>Please allow location access or search for a city</p>
+                    </div>
+                    <div class="card-body">
+                        <div class="weather-icon">
+                            <i class="fas fa-location-arrow"></i>
+                        </div>
+                        <div class="temp">--°C</div>
+                        <div class="weather-desc">Getting your weather data</div>
+                        <div class="weather-details">
+                            <div class="detail-item">
+                                <i class="fas fa-wind"></i>
+                                <span>-- m/s</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-tint"></i>
+                                <span>--%</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-eye"></i>
+                                <span>-- km</span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-compress-alt"></i>
+                                <span>-- hPa</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Humidity Chart Section -->
+        <section id="humidity-chart">
+            <h2 class="section-title">24-Hour Humidity Forecast</h2>
+            <div class="chart-container">
+                <canvas id="humidityChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Forecast Section -->
+        <section id="forecast">
+            <h2 class="section-title">5-Day Forecast</h2>
+            <div class="loader" id="forecastLoader"></div>
+            <div class="error-message" id="forecastError"></div>
+            <div class="forecast-container" id="forecastContainer">
+                <div class="forecast-item">
+                    <div class="forecast-day">Loading...</div>
+                    <div class="forecast-date">data</div>
+                    <div class="forecast-icon">
+                        <i class="fas fa-cloud"></i>
+                    </div>
+                    <div class="forecast-temp">--°C</div>
+                    <div class="forecast-desc">Please wait</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Unique Features Section -->
+        <section id="unique-features">
+            <h2 class="section-title">What Makes EmmiDev Unique</h2>
+            <div class="unique-features">
+                <div class="unique-feature">
+                    <i class="fas fa-brain"></i>
+                    <h3>AI-Powered Predictions</h3>
+                    <p>Our advanced AI algorithms analyze weather patterns to give you the most accurate forecasts.</p>
+                </div>
+                <div class="unique-feature">
+                    <i class="fas fa-heartbeat"></i>
+                    <h3>Health Integration</h3>
+                    <p>Get personalized health recommendations based on current weather conditions.</p>
+                </div>
+                <div class="unique-feature">
+                    <i class="fas fa-route"></i>
+                    <h3>Travel Planning</h3>
+                    <p>Plan your trips with weather-aware suggestions for the best travel experience.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lifestyle Section -->
+        <section id="lifestyle" class="lifestyle">
+            <h2 class="section-title">Lifestyle Recommendations</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 2rem; color: white;">
+                Personalized suggestions based on current weather conditions to help you plan your day
+            </p>
+            
+            <div class="recommendation-cards" id="lifestyleCards">
+                <!-- Lifestyle recommendations will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Health Section -->
+        <section id="health" class="health">
+            <h2 class="section-title">Health Insights</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 2rem; color: white;">
+                Health conditions and recommendations based on current environmental factors
+            </p>
+            
+            <div class="health-cards" id="healthCards">
+                <!-- Health insights will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Health Alerts Section -->
+        <section class="alerts">
+            <h2 class="section-title">Health Alerts</h2>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 2rem;">
+                Important notifications about health-related weather conditions
+            </p>
+            
+            <div class="alert-cards" id="alertCards">
+                <!-- Health alerts will be populated by JavaScript -->
+            </div>
+        </section>
+
+        <!-- Contact Form
+        <section id="about">
+            <h2 class="section-title">Contact Us</h2>
+            <div class="contact-form">
+                <form id="contactForm">
+                    <div class="form-group">
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Your Message</label>
+                        <textarea id="message" name="message" class="form-control" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+        </section> -->
+    </main>
+
+    <!-- Premium Subscription Popup -->
+    <div class="popup-overlay" id="premiumPopup">
+        <div class="popup-content">
+            <span class="close-popup" id="closePopup">&times;</span>
+            <h2 class="section-title">Upgrade to EmmiDev Premium</h2>
+            <p style="text-align: center; max-width: 700px; margin: 0 auto 2rem;">
+                Get access to advanced weather forecasting, health alerts, and personalized lifestyle recommendations.
+            </p>
+
+            <div class="features">
+                <div class="feature">
+                    <i class="fas fa-bolt"></i>
+                    <h3>Hyperlocal Forecasts</h3>
+                    <p>Street-level accuracy with minute-by-minute precipitation forecasts.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-map-marked-alt"></i>
+                    <h3>Advanced Radar Maps</h3>
+                    <p>Real-time weather radar, cloud movement, and storm tracking.</p>
+                </div>
+                <div class="feature">
+                    <i class="fas fa-heartbeat"></i>
+                    <h3>Health Alerts</h3>
+                    <p>Pollen count, UV index, air quality, and flu season warnings.</p>
+                </div>
+            </div>
+
+            <div class="plans">
+                <div class="plan">
+                    <div class="plan-header">
+                        <div class="plan-name">Free</div>
+                        <div class="plan-price">$0 <span>/month</span></div>
+                        <div class="plan-desc">Basic weather information</div>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Current weather</li>
+                            <li><i class="fas fa-check"></i> 3-day forecast</li>
+                            <li><i class="fas fa-check"></i> Basic health alerts</li>
+                            <li><i class="fas fa-times"></i> No ads</li>
+                            <li><i class="fas fa-times"></i> Advanced radar</li>
+                            <li><i class="fas fa-times"></i> Historical data</li>
+                        </ul>
+                        <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; color: var(--dark); border-color: var(--dark);">Current Plan</a>
+                    </div>
+                </div>
+
+                <div class="plan popular">
+                    <div class="plan-header">
+                        <div class="plan-name">Plus</div>
+                        <div class="plan-price">$4.99 <span>/month</span></div>
+                        <div class="plan-desc">Advanced features</div>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Current weather</li>
+                            <li><i class="fas fa-check"></i> 7-day forecast</li>
+                            <li><i class="fas fa-check"></i> Detailed health alerts</li>
+                            <li><i class="fas fa-check"></i> No ads</li>
+                            <li><i class="fas fa-check"></i> Advanced radar</li>
+                            <li><i class="fas fa-times"></i> Historical data</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary" style="width: 100%; text-align: center;">Upgrade to Plus</a>
+                    </div>
+                </div>
+
+                <div class="plan">
+                    <div class="plan-header">
+                        <div class="plan-name">Pro</div>
+                        <div class="plan-price">$9.99 <span>/month</span></div>
+                        <div class="plan-desc">Complete weather experience</div>
+                    </div>
+                    <div class="plan-body">
+                        <ul class="plan-features">
+                            <li><i class="fas fa-check"></i> Current weather</li>
+                            <li><i class="fas fa-check"></i> 10-day forecast</li>
+                            <li><i class="fas fa-check"></i> All health alerts</li>
+                            <li><i class="fas fa-check"></i> No ads</li>
+                            <li><i class="fas fa-check"></i> Premium radar</li>
+                            <li><i class="fas fa-check"></i> Historical data</li>
+                        </ul>
+                        <a href="#" class="btn btn-primary" style="width: 100%; text-align: center;">Go Pro</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>EmmiDev Weather</h3>
+                <p>Your Weather, Your World. Providing accurate forecasts and lifestyle recommendations worldwide.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#forecast">Forecast</a></li>
+                    <li><a href="#lifestyle">Lifestyle</a></li>
+                    <li><a href="#health">Health</a></li>
+                    <li><a href="#" id="premium-footer-link">Premium</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Resources</h3>
+                <ul>
+                    <li><a href="#">Weather API</a></li>
+                    <li><a href="#">Radar Maps</a></li>
+                    <li><a href="#">Weather Blog</a></li>
+                    <li><a href="#">FAQ</a></li>
+                    <li><a href="#">Support Center</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>Contact Info</h3>
+                <ul>
+                    <li><i class="fas fa-map-marker-alt"></i> 123 Weather Ave, Climate City</li>
+                    <li><i class="fas fa-phone"></i> +256 770 680 938</li>
+                    <li><i class="fas fa-fax"></i> +256 770 680 939</li>
+                    <li><i class="fas fa-globe"></i><a href="https://www.emimidev.com" target="_blank"> www.emimidev.com</a></li>
+                    <li><i class="fas fa-envelope"></i> eolara68@gmail.com</li>
+                    <li><i class="fas fa-envelope"></i> support@emimidev.com</li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>&copy; 2025 EmmiDev Weather. All rights reserved.</p>
+        </div>
+    </footer>
+</body>
+</html>
