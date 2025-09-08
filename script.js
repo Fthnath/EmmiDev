@@ -1,4 +1,4 @@
- // API Key for OpenWeatherMap - Replace with your actual key
+// API Key for OpenWeatherMap - Replace with your actual key
         const API_KEY = '05f1751b78f7a309da274a2f935980cf';
         
         // DOM Elements
@@ -17,6 +17,8 @@
         const premiumFooterLink = document.getElementById('premium-footer-link');
         const premiumPopup = document.getElementById('premiumPopup');
         const closePopup = document.getElementById('closePopup');
+        const menuToggle = document.getElementById('menuToggle');
+        const mainNav = document.getElementById('mainNav');
         
         let currentWeatherData = null;
         let humidityChart = null;
@@ -46,6 +48,18 @@
                 weatherError.style.display = 'block';
                 getWeatherData('London');
             }
+        });
+
+        // Mobile menu toggle
+        menuToggle.addEventListener('click', () => {
+            mainNav.classList.toggle('active');
+        });
+
+        // Close mobile menu when clicking on a link
+        document.querySelectorAll('nav a').forEach(link => {
+            link.addEventListener('click', () => {
+                mainNav.classList.remove('active');
+            });
         });
 
         // Premium popup functionality
@@ -265,6 +279,7 @@
                 },
                 options: {
                     responsive: true,
+                    maintainAspectRatio: false,
                     plugins: {
                         title: {
                             display: true,
@@ -631,8 +646,12 @@
             const ctx = canvas.getContext('2d');
             
             // Set canvas size to window size
-            canvas.width = window.innerWidth;
-            canvas.height = 500;
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerWidth > 768 ? 500 : 400;
+            }
+            
+            resizeCanvas();
             
             // Animation variables
             let clouds = [];
@@ -673,7 +692,7 @@
                 ctx.arc(x, y, radius, 0, Math.PI * 2);
                 const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-                                gradient.addColorStop(1, 'rgba(255, 215, 0, 0.5)');
+                gradient.addColorStop(1, 'rgba(255, 215, 0, 0.5)');
                 ctx.fillStyle = gradient;
                 ctx.fill();
             }
@@ -849,8 +868,7 @@
             
             // Resize event
             window.addEventListener('resize', function() {
-                canvas.width = window.innerWidth;
-                canvas.height = 500;
+                resizeCanvas();
             });
             
             // Return function to update animation based on weather
@@ -863,25 +881,20 @@
         // Initialize animation and get update function
         const updateAnimation = initAnimation();
 
-        // Form submission
-        document.getElementById('contactForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            alert('Thank you for your message! We will get back to you soon.');
-            this.reset();
-        });
-
         // Smooth scrolling for navigation
         document.querySelectorAll('nav a').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                if (targetId.startsWith('#')) {
+                if (this.getAttribute('href').startsWith('#')) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
                     const targetElement = document.querySelector(targetId);
                     
-                    window.scrollTo({
-                        top: targetElement.offsetTop - 100,
-                        behavior: 'smooth'
-                    });
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 100,
+                            behavior: 'smooth'
+                        });
+                    }
                 }
             });
-        });
+        })
