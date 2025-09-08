@@ -625,6 +625,8 @@
             }
         }
 
+        // ... [previous code remains unchanged above]
+
         // Canvas animation for the header
         function initAnimation() {
             const canvas = document.getElementById('weatherAnimation');
@@ -641,7 +643,7 @@
             let frameCount = 0;
             let isRaining = false;
             let isSunny = true;
-            
+
             // Create clouds
             for (let i = 0; i < 5; i++) {
                 clouds.push({
@@ -651,10 +653,9 @@
                     speed: 0.5 + Math.random() * 1.5
                 });
             }
-            
-            // Draw sun with rays
+
+            // Draw sun with rays (unchanged)
             function drawSun(x, y, radius) {
-                // Sun rays
                 ctx.save();
                 ctx.translate(x, y);
                 for (let i = 0; i < 12; i++) {
@@ -667,18 +668,16 @@
                     ctx.stroke();
                 }
                 ctx.restore();
-                
-                // Sun body
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, Math.PI * 2);
                 const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
                 gradient.addColorStop(0, 'rgba(255, 255, 255, 1)');
-                                gradient.addColorStop(1, 'rgba(255, 215, 0, 0.5)');
+                gradient.addColorStop(1, 'rgba(255, 215, 0, 0.5)');
                 ctx.fillStyle = gradient;
                 ctx.fill();
             }
-            
-            // Draw cloud
+
+            // Draw cloud (unchanged)
             function drawCloud(x, y, radius) {
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, Math.PI * 2);
@@ -688,12 +687,11 @@
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
                 ctx.fill();
             }
-            
-            // Draw rain
+
+            // Draw rain (unchanged)
             function drawRain() {
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
                 ctx.lineWidth = 2;
-                
                 for (let i = 0; i < 100; i++) {
                     const x = Math.random() * canvas.width;
                     const y = Math.random() * canvas.height;
@@ -703,98 +701,151 @@
                     ctx.stroke();
                 }
             }
-            
-            // Draw person with umbrella
-            function drawPersonWithUmbrella(x, y) {
-                // Umbrella
+
+            // --- REPLACED ANIMATION: Draw a more realistic human figure walking/with umbrella ---
+
+            // Helper: draw a simple but proportional human from reference points
+            function drawRealisticPerson(x, y, isUmbrella = false, step = 0) {
+                // Body proportions (all relative)
+                const headRadius = 18;
+                const bodyLength = 60;
+                const armLength = 38;
+                const legLength = 48;
+                const bodyWidth = 16;
+
+                // Walking animation
+                // step is a value between 0 and 1 (fraction of stride cycle)
+                const legSwing = Math.sin(step * 2 * Math.PI) * 22;
+                const armSwing = -Math.sin(step * 2 * Math.PI) * 18;
+
+                // HEAD
+                ctx.save();
                 ctx.beginPath();
-                ctx.arc(x, y - 20, 25, Math.PI, Math.PI * 2, false);
-                ctx.fillStyle = '#ff6b01';
+                ctx.arc(x, y - bodyLength - headRadius, headRadius, 0, Math.PI * 2);
+                ctx.fillStyle = "#f8dbc5";
+                ctx.shadowColor = "rgba(0,0,0,0.08)";
+                ctx.shadowBlur = 6;
                 ctx.fill();
-                
+                ctx.restore();
+
+                // BODY
+                ctx.save();
                 ctx.beginPath();
-                ctx.moveTo(x - 25, y - 20);
-                ctx.lineTo(x + 25, y - 20);
-                ctx.strokeStyle = '#ff6b01';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                // Umbrella handle
-                ctx.beginPath();
-                ctx.moveTo(x, y - 20);
+                ctx.moveTo(x, y - bodyLength);
                 ctx.lineTo(x, y);
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
+                ctx.lineWidth = bodyWidth;
+                ctx.strokeStyle = "#23395d";
+                ctx.lineCap = "round";
                 ctx.stroke();
-                
-                // Person body
+                ctx.restore();
+
+                // LEFT LEG
+                ctx.save();
                 ctx.beginPath();
-                ctx.arc(x, y, 10, 0, Math.PI * 2);
-                ctx.fillStyle = '#333';
+                ctx.moveTo(x, y);
+                ctx.lineTo(x - 14 + legSwing, y + legLength);
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = "#444";
+                ctx.lineCap = "round";
+                ctx.stroke();
+                ctx.restore();
+
+                // RIGHT LEG
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                ctx.lineTo(x + 14 - legSwing, y + legLength);
+                ctx.lineWidth = 10;
+                ctx.strokeStyle = "#444";
+                ctx.lineCap = "round";
+                ctx.stroke();
+                ctx.restore();
+
+                // LEFT ARM
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(x, y - bodyLength + 12);
+                ctx.lineTo(x - 18 + armSwing, y - bodyLength + 12 + armLength);
+                ctx.lineWidth = 7;
+                ctx.strokeStyle = "#f8dbc5";
+                ctx.lineCap = "round";
+                ctx.stroke();
+                ctx.restore();
+
+                // RIGHT ARM (holding umbrella if raining)
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(x, y - bodyLength + 12);
+                let rx = x + 18 - armSwing, ry = y - bodyLength + 12 + armLength;
+                if (isUmbrella) {
+                    // Arm up (holding umbrella)
+                    rx = x + 28;
+                    ry = y - bodyLength - 10;
+                }
+                ctx.lineTo(rx, ry);
+                ctx.lineWidth = 7;
+                ctx.strokeStyle = "#f8dbc5";
+                ctx.lineCap = "round";
+                ctx.stroke();
+                ctx.restore();
+
+                // Simple "shoe"
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x - 14 + legSwing, y + legLength, 7, 0, Math.PI * 2);
+                ctx.arc(x + 14 - legSwing, y + legLength, 7, 0, Math.PI * 2);
+                ctx.fillStyle = "#2b2a2a";
                 ctx.fill();
-                
-                // Body
+                ctx.restore();
+
+                // Simple "hand"
+                ctx.save();
                 ctx.beginPath();
-                ctx.moveTo(x, y + 10);
-                ctx.lineTo(x, y + 30);
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                // Legs
-                ctx.beginPath();
-                ctx.moveTo(x, y + 30);
-                ctx.lineTo(x - 10, y + 40);
-                ctx.moveTo(x, y + 30);
-                ctx.lineTo(x + 10, y + 40);
-                ctx.stroke();
-            }
-            
-            // Draw person with headphones
-            function drawPersonWithHeadphones(x, y) {
-                // Headphones
-                ctx.beginPath();
-                ctx.arc(x - 8, y - 5, 5, 0, Math.PI * 2);
-                ctx.arc(x + 8, y - 5, 5, 0, Math.PI * 2);
-                ctx.moveTo(x - 13, y - 5);
-                ctx.lineTo(x + 13, y - 5);
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 2;
-                ctx.stroke();
-                
-                // Person head
-                ctx.beginPath();
-                ctx.arc(x, y, 10, 0, Math.PI * 2);
-                ctx.fillStyle = '#333';
+                ctx.arc(x - 18 + armSwing, y - bodyLength + 12 + armLength, 5, 0, Math.PI * 2);
+                ctx.arc(rx, ry, 5, 0, Math.PI * 2);
+                ctx.fillStyle = "#f8dbc5";
                 ctx.fill();
-                
-                // Body
-                ctx.beginPath();
-                ctx.moveTo(x, y + 10);
-                ctx.lineTo(x, y + 30);
-                ctx.strokeStyle = '#333';
-                ctx.lineWidth = 3;
-                ctx.stroke();
-                
-                // Arms
-                ctx.beginPath();
-                ctx.moveTo(x, y + 15);
-                ctx.lineTo(x + 15, y + 20);
-                ctx.stroke();
-                
-                // Legs
-                ctx.beginPath();
-                ctx.moveTo(x, y + 30);
-                ctx.lineTo(x - 10, y + 40);
-                ctx.moveTo(x, y + 30);
-                ctx.lineTo(x + 10, y + 40);
-                ctx.stroke();
+                ctx.restore();
+
+                // UMBRELLA (if raining)
+                if (isUmbrella) {
+                    // Handle
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.moveTo(x + 28, y - bodyLength - 10);
+                    ctx.lineTo(x + 28, y - bodyLength - 80);
+                    ctx.lineWidth = 4;
+                    ctx.strokeStyle = "#222";
+                    ctx.stroke();
+                    ctx.restore();
+
+                    // Canopy
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(x + 28, y - bodyLength - 80, 38, Math.PI, 2 * Math.PI);
+                    ctx.fillStyle = "#ff6b01";
+                    ctx.fill();
+                    ctx.restore();
+
+                    // Canopy ribs
+                    for (let i = 0; i < 5; i++) {
+                        let theta = Math.PI + (i / 4) * Math.PI;
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.moveTo(x + 28, y - bodyLength - 80);
+                        ctx.lineTo(x + 28 + 38 * Math.cos(theta), y - bodyLength - 80 + 38 * Math.sin(theta));
+                        ctx.lineWidth = 1.8;
+                        ctx.strokeStyle = "#c84e00";
+                        ctx.stroke();
+                        ctx.restore();
+                    }
+                }
             }
-            
+
             // Animation loop
             function animate() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
+
                 // Background gradient based on weather
                 const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
                 if (isRaining) {
@@ -809,14 +860,14 @@
                 }
                 ctx.fillStyle = gradient;
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
+
                 // Draw sun
                 if (isSunny && !isRaining) {
                     drawSun(sunX, sunY, 40);
                     sunY -= 0.1;
                     if (sunY < canvas.height * 0.3) sunY = canvas.height * 0.3;
                 }
-                
+
                 // Update and draw clouds
                 clouds.forEach(cloud => {
                     cloud.x += cloud.speed;
@@ -825,34 +876,33 @@
                     }
                     drawCloud(cloud.x, cloud.y, cloud.radius);
                 });
-                
+
                 // Draw rain if raining
                 if (isRaining) {
                     drawRain();
-                    
-                    // Draw person with umbrella
-                    const personX = (frameCount / 3) % (canvas.width + 100) - 50;
-                    drawPersonWithUmbrella(personX, canvas.height * 0.8);
-                } else {
-                    // Draw person with headphones
-                    const personX = (frameCount / 3) % (canvas.width + 100) - 50;
-                    drawPersonWithHeadphones(personX, canvas.height * 0.8);
                 }
-                
+
+                // Draw realistic human walking (with umbrella if raining)
+                const strideLength = 320; // pixels for a full stride cycle
+                const personX = (frameCount * 2.5) % (canvas.width + strideLength) - strideLength / 2;
+                const personY = canvas.height * 0.8;
+                const step = ((frameCount * 2.5) % strideLength) / strideLength;
+                drawRealisticPerson(personX, personY, isRaining, step);
+
                 frameCount++;
-                
+
                 requestAnimationFrame(animate);
             }
-            
+
             // Start animation
             animate();
-            
+
             // Resize event
             window.addEventListener('resize', function() {
                 canvas.width = window.innerWidth;
                 canvas.height = 500;
             });
-            
+
             // Return function to update animation based on weather
             return function(weatherType) {
                 isRaining = weatherType.toLowerCase() === 'rain';
@@ -885,3 +935,4 @@
                 }
             });
         });
+
