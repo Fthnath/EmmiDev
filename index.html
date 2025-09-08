@@ -6,24 +6,26 @@
     <title>EmmiDev Weather - Your Weather, Your World</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
-<link rel="apple-touch-icon" sizes="60x60" href="favicon/android-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="72x72" href="favicon/android-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="76x76" href="favicon/android-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="114x114" href="favicon/android-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="120x120" href="favicon/android-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="144x144" href="favicon/android-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="152x152" href="favicon/android-icon-144x144.png">
-<link rel="apple-touch-icon" sizes="180x180" href="favicon/android-icon-144x144.png">
-<link rel="icon" type="image/png" sizes="192x192"  href="favicon/android-icon-192x192.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-<link rel="manifest" href="favicon/manifest.json">
-<meta name="msapplication-TileColor" content="#ffffff">
-<meta name="msapplication-TileImage" content="favicon/ms-icon-144x144.png">
-<meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" sizes="60x60" href="favicon/android-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="favicon/android-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="favicon/android-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="favicon/android-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="favicon/android-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="favicon/android-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="favicon/android-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/android-icon-144x144.png">
+    <link rel="icon" type="image/png" sizes="192x192"  href="favicon/android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="manifest" href="favicon/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="favicon/ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-3d@4.0.0/dist/chartjs-chart-3d.min.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="style.css">
     <script src="script.js" defer></script>
 </head>
@@ -107,6 +109,20 @@
             <div class="chart-container">
                 <canvas id="humidityChart"></canvas>
             </div>
+        </section>
+
+        <!-- 3D Bar Graph Section -->
+        <section id="bar3d-graph">
+            <h2 class="section-title">3D Weather Data Bar Graph</h2>
+            <div class="chart-container">
+                <canvas id="bar3DChart" style="width:100%;max-width:800px;height:400px;"></canvas>
+            </div>
+        </section>
+
+        <!-- Live Radar Map Section -->
+        <section id="radar-map">
+            <h2 class="section-title">Live Weather Radar</h2>
+            <div id="rainviewer-map" style="height:400px;width:100%;max-width:900px;margin:0 auto;border-radius:18px;overflow:hidden;"></div>
         </section>
 
         <!-- Forecast Section -->
@@ -349,5 +365,59 @@
             <p>&copy; 2025 EmmiDev Weather. All rights reserved.</p>
         </div>
     </footer>
+    <!-- RainViewer & Leaflet JS for Radar Map -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://api.rainviewer.com/js/rainviewer.min.js"></script>
+    <script>
+    window.addEventListener('DOMContentLoaded', function () {
+        // 3D Bar Graph
+        const ctx = document.getElementById('bar3DChart')?.getContext('2d');
+        if (ctx) {
+            const barLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+            const barData = [25, 28, 22, 30, 27];
+            new Chart(ctx, {
+                type: 'bar3d',
+                data: {
+                    labels: barLabels,
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: barData,
+                        backgroundColor: [
+                            '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'
+                        ],
+                        borderRadius: 8,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    plugins: {
+                        legend: { display: true },
+                        title: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { beginAtZero: true, grid: { display: true } }
+                    },
+                    bar3d: {
+                        enabled: true,
+                        viewAngle: 60,
+                        depth: 20,
+                        thickness: 30,
+                        zAxis: { display: false }
+                    }
+                }
+            });
+        }
+        // Radar Map
+        if (document.getElementById('rainviewer-map')) {
+            var map = L.map('rainviewer-map').setView([2.774, 32.2881], 6); // Uganda center
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(map);
+            window.rainviewer = new RainViewer(map);
+        }
+    });
+    </script>
 </body>
 </html>
+
