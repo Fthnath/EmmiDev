@@ -292,7 +292,56 @@
                 }
             });
         }
-
+       
+// (Add this block to the end of your script.js, or keep only your dynamic/weather JS above this)
+window.addEventListener('DOMContentLoaded', function () {
+    // 3D Bar Graph (already included in index.html inline as well for robustness)
+    const ctx = document.getElementById('bar3DChart')?.getContext('2d');
+    if (ctx) {
+        const barLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+        const barData = [25, 28, 22, 30, 27];
+        new Chart(ctx, {
+            type: 'bar3d',
+            data: {
+                labels: barLabels,
+                datasets: [{
+                    label: 'Temperature (°C)',
+                    data: barData,
+                    backgroundColor: [
+                        '#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'
+                    ],
+                    borderRadius: 8,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                plugins: {
+                    legend: { display: true },
+                    title: { display: false }
+                },
+                scales: {
+                    x: { grid: { display: false } },
+                    y: { beginAtZero: true, grid: { display: true } }
+                },
+                bar3d: {
+                    enabled: true,
+                    viewAngle: 60,
+                    depth: 20,
+                    thickness: 30,
+                    zAxis: { display: false }
+                }
+            }
+        });
+    }
+    // Radar Map (already included inline in index.html as well for robustness)
+    if (document.getElementById('rainviewer-map')) {
+        var map = L.map('rainviewer-map').setView([2.774, 32.2881], 6);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        window.rainviewer = new RainViewer(map);
+    }
+});
         // Update lifestyle section based on weather data
         function updateLifestyleSection(weatherData) {
             const temp = weatherData.main.temp;
@@ -935,4 +984,5 @@
                 }
             });
         });
+
 
