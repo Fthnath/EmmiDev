@@ -1,0 +1,31 @@
+/* Weather cards and forecast detail layout. */
+
+#currentWeatherCard,
+#hourlyForecast,
+#dailyForecast {
+    min-width: 0;
+}
+
+.current-weather-card {
+    overflow: hidden;
+}
+
+.hourly-scroll {
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+}
+
+.daily-item,
+.hourly-item {
+    min-width: 0;
+}
+
+@media (max-width: 480px) {
+    .weather-details-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .daily-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

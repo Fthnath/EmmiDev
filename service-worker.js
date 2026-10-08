@@ -3,17 +3,27 @@
  * Offline-first caching for the app shell.
  */
 
-const CACHE_VERSION = 'emmidev-v2.0.1';
+const CACHE_VERSION = 'emmidev-v2.0.2';
 const APP_SHELL = [
     './',
     './index.html',
     './manifest.json',
     './weather-icon.svg',
+    './favicon/favicon-16x16.png',
+    './favicon/favicon-32x32.png',
+    './favicon/favicon-96x96.png',
+    './favicon/android-icon-144x144.png',
+    './favicon/android-icon-192x192.png',
+    './favicon/apple-icon-180x180.png',
+    './favicon/ms-icon-144x144.png',
     './css/main.css',
     './css/themes.css',
     './css/layout.css',
     './css/components.css',
     './css/animations.css',
+    './css/hero.css',
+    './css/weather.css',
+    './css/pwa.css',
     './js/main.js',
     './js/config.js',
     './js/core/api.js',

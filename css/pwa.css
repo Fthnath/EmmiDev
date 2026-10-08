@@ -1,0 +1,16 @@
+/* Progressive web app install controls and safe-area spacing. */
+
+#installPwaBtn,
+#installPwaBtn2 {
+    touch-action: manipulation;
+}
+
+.app-footer {
+    padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
+}
+
+@media (display-mode: standalone) {
+    .app-header {
+        padding-top: env(safe-area-inset-top);
+    }
+}

@@ -1,0 +1,28 @@
+/* Hero weather scene enhancements. */
+
+.hero-canvas-wrap {
+    isolation: isolate;
+}
+
+.hero-canvas,
+.hero-overlay {
+    pointer-events: none;
+}
+
+.hero-content {
+    z-index: 1;
+}
+
+.hero-geo-btn {
+    z-index: 2;
+}
+
+@media (max-width: 480px) {
+    .hero-meta {
+        gap: 10px;
+    }
+
+    .hero-meta-item {
+        font-size: 0.8rem;
+    }
+}
