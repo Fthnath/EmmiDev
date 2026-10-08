@@ -17,6 +17,7 @@ import { WeatherScene } from './ui/animations.js';
 import { LocationManager } from './modules/locations.js';
 import { Weather } from './modules/weather.js';
 import { AI } from './modules/ai.js';
+import { WeatherMap } from './modules/map.js';
 import { runSelfTests } from './core/config-tests.js';
 
 // ============================================
@@ -68,10 +69,19 @@ async function bootstrap() {
     // ---- 8. Location manager ----
     await initLocationManager();
 
-    // ---- 9. Weather module ----
+    // ---- 9. Weather map ----
+    WeatherMap.init(LocationManager.getActive());
+    Bus.on('route:changed', view => {
+        if (view === 'maps') WeatherMap.onShow();
+        if (view === 'forecast') Weather.resizeCharts();
+    });
+    Bus.on(Events.LOCATION_CHANGED, location => WeatherMap.setLocation(location));
+    if (router.current === 'maps') WeatherMap.onShow();
+
+    // ---- 10. Weather module ----
     Weather.init();
 
-    // ---- 10. AI module ----
+    // ---- 11. AI module ----
     AI.init();
 
     // ---- 11. PWA install prompt ----

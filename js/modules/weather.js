@@ -459,7 +459,22 @@ class WeatherModule {
     }
 
     renderCharts(data, tempUnit) {
-        if (!window.Chart) return;
+        const chartContainers = document.querySelectorAll('.chart-container');
+        if (!window.Chart) {
+            console.error('[Weather] Chart.js did not load; forecast charts are unavailable.');
+            chartContainers.forEach(container => {
+                let status = container.querySelector('.chart-status');
+                if (!status) {
+                    status = document.createElement('p');
+                    status.className = 'chart-status';
+                    status.setAttribute('role', 'status');
+                    container.appendChild(status);
+                }
+                status.textContent = 'Charts could not load. Check your connection and refresh the page.';
+            });
+            return;
+        }
+        chartContainers.forEach(container => container.querySelector('.chart-status')?.remove());
 
         // Temperature chart
         const tempCtx = document.getElementById('tempChart');
@@ -533,6 +548,11 @@ class WeatherModule {
                 }
             });
         }
+    }
+
+    resizeCharts() {
+        this._tempChart?.resize();
+        this._humChart?.resize();
     }
 
     renderLifestyle(data) {

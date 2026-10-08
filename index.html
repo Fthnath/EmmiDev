@@ -193,12 +193,15 @@
             <div class="container section">
                 <h2 class="section-title" data-i18n="nav.maps">Weather Maps</h2>
                 <div class="map-toolbar">
-                    <button class="map-layer-btn active" data-layer="precip">Rain</button>
-                    <button class="map-layer-btn" data-layer="temp">Temperature</button>
-                    <button class="map-layer-btn" data-layer="wind">Wind</button>
-                    <button class="map-layer-btn" data-layer="clouds">Clouds</button>
+                    <button class="map-layer-btn active" data-layer="precip" type="button">Rain radar</button>
+                    <button class="map-layer-btn" type="button" disabled title="Temperature map tiles are not available yet">Temperature</button>
+                    <button class="map-layer-btn" type="button" disabled title="Wind map tiles are not available yet">Wind</button>
+                    <button class="map-layer-btn" type="button" disabled title="Cloud map tiles are not available yet">Clouds</button>
                 </div>
-                <div id="weather-radar-map" class="weather-map"></div>
+                <div class="weather-map-shell">
+                    <div id="weather-radar-map" class="weather-map" aria-label="Interactive weather map"></div>
+                    <p id="weatherMapStatus" class="weather-map-status" role="status" hidden></p>
+                </div>
             </div>
         </section>
 
@@ -443,6 +446,10 @@
 
     <!-- Toast container (managed by toast.js) -->
     <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- Charts and interactive maps -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <!-- Main ES Module Entry -->
     <script type="module" src="js/main.js"></script>
