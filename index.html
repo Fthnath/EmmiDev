@@ -1,357 +1,450 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light" data-theme-mode="auto" dir="ltr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EmmiDev Weather - Your Weather, Your World</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="EmmiDev Weather — Africa-first weather intelligence with health, farming, and AI guidance. Free forever.">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EmmiDev">
+
+    <title>EmmiDev Weather — Your Weather, Your World</title>
+
+    <!-- Icons + Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="apple-touch-icon" sizes="57x57" href="/apple-icon-57x57.png">
-    <link rel="apple-touch-icon" sizes="60x60" href="favicon/android-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="72x72" href="favicon/android-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="76x76" href="favicon/android-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="114x114" href="favicon/android-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="120x120" href="favicon/android-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="144x144" href="favicon/android-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="favicon/android-icon-144x144.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon/android-icon-144x144.png">
-    <link rel="icon" type="image/png" sizes="192x192"  href="favicon/android-icon-192x192.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+    <!-- Our Modular CSS -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/weather.css">
+    <link rel="stylesheet" href="css/hero.css">
+    <link rel="stylesheet" href="css/pwa.css">
+
+    <!-- Favicon -->
     <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
     <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-    <link rel="manifest" href="favicon/manifest.json">
-    <meta name="msapplication-TileColor" content="#ffffff">
-    <meta name="msapplication-TileImage" content="favicon/ms-icon-144x144.png">
-    <meta name="theme-color" content="#ffffff">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-3d@4.0.0/dist/chartjs-chart-3d.min.js"></script>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/android-icon-144x144.png">
+    <link rel="manifest" href="manifest.json">
 </head>
 <body>
-    <!-- Header with Navigation -->
-    <header>
-        <canvas class="header-canvas" id="weatherAnimation"></canvas>
-        <div class="nav-container">
-            <div class="logo">
-                <i class="fas fa-cloud-sun"></i>
-                <span>EmmiDev Weather</span>
+
+    <!-- ============================================
+         HERO — Animated Weather Scene
+         ============================================ -->
+    <div class="hero-canvas-wrap">
+        <canvas id="heroWeatherCanvas" class="hero-canvas" aria-hidden="true"></canvas>
+        <div class="hero-overlay"></div>
+
+        <div class="hero-content">
+            <div class="hero-location">
+                <i class="fas fa-map-marker-alt"></i>
+                <span id="heroLocationName">Detecting location...</span>
             </div>
-            <nav>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#forecast">Forecast</a></li>
-                    <li><a href="#lifestyle">Lifestyle</a></li>
-                    <li><a href="#health">Health</a></li>
-                    <li><a href="#" id="premium-link" class="premium-icon"><i class="fas fa-crown"></i> Premium</a></li>
-                    <li><a href="#about">About</a></li>
-                </ul>
-            </nav>
+
+            <div class="hero-temp-wrap">
+                <div class="hero-temp" id="heroTemp">--</div>
+                <div class="hero-temp-unit">°C</div>
+            </div>
+
+            <div class="hero-desc" id="heroDesc">Loading weather...</div>
+
+            <div class="hero-meta">
+                <div class="hero-meta-item">
+                    <i class="fas fa-temperature-low"></i>
+                    <span id="heroFeelsLike">Feels --°</span>
+                </div>
+                <div class="hero-meta-item">
+                    <i class="fas fa-wind"></i>
+                    <span id="heroWind">-- km/h</span>
+                </div>
+                <div class="hero-meta-item">
+                    <i class="fas fa-tint"></i>
+                    <span id="heroHumidity">--%</span>
+                </div>
+                <div class="hero-meta-item">
+                    <i class="fas fa-eye"></i>
+                    <span id="heroUpdated">--</span>
+                </div>
+            </div>
+
+            <div class="hero-search">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="heroSearchInput" placeholder="Search city..." autocomplete="off" data-i18n-placeholder="search.placeholder">
+                    <div id="searchSuggestions" class="search-suggestions"></div>
+                </div>
+            </div>
         </div>
 
-        <div class="hero">
-            <h1>Your Weather, Your World</h1>
-            <p>Get hyperlocal weather forecasts, lifestyle recommendations, and health alerts tailored just for you - anywhere in the world.</p>
-            
-            <div class="search-container">
-                <input type="text" class="search-input" id="citySearch" placeholder="Enter your city name">
-                <button class="search-btn" id="searchBtn"><i class="fas fa-search"></i> Search</button>
-            </div>
+        <button class="hero-geo-btn" id="useMyLocation" title="Use my location" aria-label="Use my location">
+            <i class="fas fa-crosshairs"></i>
+        </button>
+    </div>
+
+    <!-- ============================================
+         APP HEADER / NAV
+         ============================================ -->
+    <header class="app-header">
+        <div class="container">
+            <nav class="nav">
+                <a href="#home" class="nav-logo" data-nav="home">
+                    <i class="fas fa-cloud-sun"></i>
+                    <span>EmmiDev Weather</span>
+                </a>
+
+                <ul class="nav-links">
+                    <li><a href="#home"      class="nav-link" data-nav="home"      data-i18n="nav.home">Home</a></li>
+                    <li><a href="#forecast"  class="nav-link" data-nav="forecast"  data-i18n="nav.forecast">Forecast</a></li>
+                    <li><a href="#maps"      class="nav-link" data-nav="maps"      data-i18n="nav.maps">Maps</a></li>
+                    <li><a href="#health"    class="nav-link" data-nav="health"    data-i18n="nav.health">Health</a></li>
+                    <li><a href="#farming"   class="nav-link" data-nav="farming"   data-i18n="nav.farming">Farming</a></li>
+                    <li><a href="#ai"        class="nav-link" data-nav="ai"        data-i18n="nav.ai">AI</a></li>
+                    <li><a href="#locations" class="nav-link" data-nav="locations" data-i18n="nav.locations">Locations</a></li>
+                    <li><a href="#history"   class="nav-link" data-nav="history"   data-i18n="nav.history">History</a></li>
+                </ul>
+
+                <div class="nav-actions">
+                    <button class="nav-icon-btn" id="installPwaBtn" title="Install app" aria-label="Install app" style="display:none">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="nav-icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="nav-icon-btn" data-nav="settings" title="Settings" aria-label="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </nav>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="container">
-        <!-- Current Weather Section -->
-        <section id="current-weather">
-            <h2 class="section-title">Current Weather</h2>
-            <div class="loader" id="weatherLoader"></div>
-            <div class="error-message" id="weatherError"></div>
-            <div class="weather-cards" id="weatherCards">
-                <div class="weather-card">
-                    <div class="card-header">
-                        <h3>Detecting your location...</h3>
-                        <p>Please allow location access or search for a city</p>
-                    </div>
-                    <div class="card-body">
-                        <div class="weather-icon">
-                            <i class="fas fa-location-arrow"></i>
-                        </div>
-                        <div class="temp">--°C</div>
-                        <div class="weather-desc">Getting your weather data</div>
-                        <div class="weather-details">
-                            <div class="detail-item">
-                                <i class="fas fa-wind"></i>
-                                <span>-- m/s</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-tint"></i>
-                                <span>--%</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-eye"></i>
-                                <span>-- km</span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-compress-alt"></i>
-                                <span>-- hPa</span>
-                            </div>
+    <!-- ============================================
+         MAIN — Routed Views
+         ============================================ -->
+    <main>
+
+        <!-- ============ HOME VIEW ============ -->
+        <section class="view view-active" data-view="home">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="current.title">Current Weather</h2>
+                <div id="currentWeatherCard">
+                    <div class="card">
+                        <div class="card-body" style="text-align:center;padding:48px 24px">
+                            <div class="loader"></div>
+                            <p style="color:var(--text-muted);margin-top:16px" data-i18n="search.detecting">Detecting your location...</p>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
 
-        <!-- Humidity Chart Section -->
-        <section id="humidity-chart">
-            <h2 class="section-title">24-Hour Humidity Forecast</h2>
-            <div class="chart-container">
-                <canvas id="humidityChart"></canvas>
+            <div class="container section">
+                <h2 class="section-title" data-i18n="lifestyle.title">Lifestyle Recommendations</h2>
+                <p style="text-align:center;max-width:640px;margin:0 auto var(--space-lg);color:var(--text-muted)" data-i18n="lifestyle.subtitle">
+                    Personalized suggestions based on current weather conditions
+                </p>
+                <div id="lifestyleCards" class="grid grid-3"></div>
+            </div>
+
+            <div class="container section">
+                <h2 class="section-title" data-i18n="forecast.hourly">Hourly Forecast</h2>
+                <div id="hourlyForecast" class="hourly-scroll"></div>
+            </div>
+
+            <div class="container section">
+                <h2 class="section-title" data-i18n="forecast.title">10-Day Forecast</h2>
+                <div id="dailyForecast" class="daily-grid"></div>
+            </div>
+
+            <div class="container section">
+                <h2 class="section-title" data-i18n="health.title">Health Insights</h2>
+                <div id="quickHealthCards" class="grid grid-3"></div>
             </div>
         </section>
 
-        <!-- Forecast Section -->
-        <section id="forecast">
-            <h2 class="section-title">5-Day Forecast</h2>
-            <div class="loader" id="forecastLoader"></div>
-            <div class="error-message" id="forecastError"></div>
-            <div class="forecast-container" id="forecastContainer">
-                <div class="forecast-item">
-                    <div class="forecast-day">Loading...</div>
-                    <div class="forecast-date">data</div>
-                    <div class="forecast-icon">
-                        <i class="fas fa-cloud"></i>
-                    </div>
-                    <div class="forecast-temp">--°C</div>
-                    <div class="forecast-desc">Please wait</div>
+        <!-- ============ FORECAST VIEW ============ -->
+        <section class="view" data-view="forecast">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="forecast.title">10-Day Forecast</h2>
+                <div id="forecastFull" class="daily-grid"></div>
+            </div>
+            <div class="container section">
+                <h2 class="section-title">Temperature Trend</h2>
+                <div class="chart-container">
+                    <canvas id="tempChart"></canvas>
+                </div>
+            </div>
+            <div class="container section">
+                <h2 class="section-title" data-i18n="current.humidity">Humidity</h2>
+                <div class="chart-container">
+                    <canvas id="humidityChart"></canvas>
                 </div>
             </div>
         </section>
 
-        <!-- Unique Features Section -->
-        <section id="unique-features">
-            <h2 class="section-title">What Makes EmmiDev Unique</h2>
-            <div class="unique-features">
-                <div class="unique-feature">
-                    <i class="fas fa-brain"></i>
-                    <h3>AI-Powered Predictions</h3>
-                    <p>Our advanced AI algorithms analyze weather patterns to give you the most accurate forecasts.</p>
+        <!-- ============ MAPS VIEW ============ -->
+        <section class="view" data-view="maps">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="nav.maps">Weather Maps</h2>
+                <div class="map-toolbar">
+                    <button class="map-layer-btn active" data-layer="precip">Rain</button>
+                    <button class="map-layer-btn" data-layer="temp">Temperature</button>
+                    <button class="map-layer-btn" data-layer="wind">Wind</button>
+                    <button class="map-layer-btn" data-layer="clouds">Clouds</button>
                 </div>
-                <div class="unique-feature">
-                    <i class="fas fa-heartbeat"></i>
-                    <h3>Health Integration</h3>
-                    <p>Get personalized health recommendations based on current weather conditions.</p>
+                <div id="weather-radar-map" class="weather-map"></div>
+            </div>
+        </section>
+
+        <!-- ============ HEALTH VIEW ============ -->
+        <section class="view" data-view="health">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="health.title">Health Insights</h2>
+                <p style="text-align:center;max-width:640px;margin:0 auto var(--space-lg);color:var(--text-muted)" data-i18n="health.subtitle">
+                    Health conditions based on current environmental factors
+                </p>
+                <div id="healthCards" class="grid grid-3"></div>
+            </div>
+            <div class="container section">
+                <h2 class="section-title">Environmental Health</h2>
+                <div id="environmentalHealth" class="grid grid-3"></div>
+            </div>
+        </section>
+
+        <!-- ============ FARMING VIEW ============ -->
+        <section class="view" data-view="farming">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="farming.title">Farming Advisor</h2>
+                <p style="text-align:center;max-width:640px;margin:0 auto var(--space-lg);color:var(--text-muted)" data-i18n="farming.subtitle">
+                    Agricultural guidance for your location
+                </p>
+                <div id="farmAdvisor" class="grid grid-2"></div>
+            </div>
+            <div class="container section">
+                <h2 class="section-title">Crop Calendar</h2>
+                <div id="cropCalendar" class="crop-grid"></div>
+            </div>
+        </section>
+
+        <!-- ============ AI VIEW ============ -->
+        <section class="view" data-view="ai">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="ai.title">AI Weather Assistant</h2>
+                <div class="ai-chat-wrap">
+                    <div id="aiMessages" class="ai-messages">
+                        <div class="ai-msg ai-msg-bot">
+                            <div class="ai-avatar"><i class="fas fa-robot"></i></div>
+                            <div class="ai-bubble">
+                                Hi! I'm your AI weather assistant. Ask me anything about the weather, farming, health, or travel planning.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-suggestions" id="aiSuggestions">
+                        <button class="ai-suggest-btn" data-q="Will it rain today?"><i class="fas fa-cloud-rain"></i> Will it rain today?</button>
+                        <button class="ai-suggest-btn" data-q="What should I wear?"><i class="fas fa-tshirt"></i> What should I wear?</button>
+                        <button class="ai-suggest-btn" data-q="Best time for outdoor activity?"><i class="fas fa-running"></i> Best time to go outside?</button>
+                        <button class="ai-suggest-btn" data-q="When should I plant my maize?"><i class="fas fa-seedling"></i> When to plant?</button>
+                        <button class="ai-suggest-btn" data-q="Explain today's health risks"><i class="fas fa-heartbeat"></i> Today's health risks</button>
+                    </div>
+                    <div class="ai-input-row">
+                        <button class="ai-voice-btn" id="aiVoiceBtn" title="Voice input"><i class="fas fa-microphone"></i></button>
+                        <input type="text" id="aiInput" class="ai-input" placeholder="Ask me anything about the weather..." data-i18n-placeholder="ai.placeholder">
+                        <button class="ai-send-btn" id="aiSendBtn"><i class="fas fa-paper-plane"></i></button>
+                    </div>
                 </div>
-                <div class="unique-feature">
-                    <i class="fas fa-route"></i>
-                    <h3>Travel Planning</h3>
-                    <p>Plan your trips with weather-aware suggestions for the best travel experience.</p>
+            </div>
+        </section>
+
+        <!-- ============ LOCATIONS VIEW ============ -->
+        <section class="view" data-view="locations">
+            <div class="container section">
+                <div class="locations-header">
+                    <h2 class="section-title" data-i18n="nav.locations">Saved Locations</h2>
+                    <button class="btn btn-primary" id="addLocationBtn">
+                        <i class="fas fa-plus"></i> Add Location
+                    </button>
+                </div>
+                <div id="locationsList" class="locations-grid"></div>
+            </div>
+        </section>
+
+        <!-- ============ HISTORY VIEW ============ -->
+        <section class="view" data-view="history">
+            <div class="container section">
+                <h2 class="section-title">Historical Weather</h2>
+                <div id="historyContent">
+                    <div class="card">
+                        <div class="card-body" style="text-align:center;padding:48px 24px">
+                            <div class="loader"></div>
+                            <p style="color:var(--text-muted);margin-top:16px">Loading historical data...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container section">
+                <h2 class="section-title">Climate Trends</h2>
+                <div class="chart-container">
+                    <canvas id="climateChart"></canvas>
                 </div>
             </div>
         </section>
 
-        <!-- Lifestyle Section -->
-        <section id="lifestyle" class="lifestyle">
-            <h2 class="section-title">Lifestyle Recommendations</h2>
-            <p style="text-align: center; max-width: 800px; margin: 0 auto 2rem; color: white;">
-                Personalized suggestions based on current weather conditions to help you plan your day
-            </p>
-            
-            <div class="recommendation-cards" id="lifestyleCards">
-                <!-- Lifestyle recommendations will be populated by JavaScript -->
+        <!-- ============ SETTINGS VIEW ============ -->
+        <section class="view" data-view="settings">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="settings.title">Settings</h2>
+
+                <div class="settings-card">
+                    <!-- Language -->
+                    <div class="settings-row">
+                        <label class="settings-label" data-i18n="settings.language">Language</label>
+                        <select id="languageSelect" class="select"></select>
+                    </div>
+
+                    <!-- Theme -->
+                    <div class="settings-row">
+                        <label class="settings-label" data-i18n="settings.theme">Theme</label>
+                        <select id="themeSelect" class="select">
+                            <option value="light" data-i18n="settings.themeLight">Light</option>
+                            <option value="dark" data-i18n="settings.themeDark">Dark</option>
+                            <option value="auto" data-i18n="settings.themeAuto">Auto</option>
+                        </select>
+                    </div>
+
+                    <!-- Units -->
+                    <div class="settings-row">
+                        <label class="settings-label" data-i18n="settings.units">Units</label>
+                        <select id="unitsSelect" class="select">
+                            <option value="metric" data-i18n="settings.unitsMetric">Metric (°C, km/h)</option>
+                            <option value="imperial" data-i18n="settings.unitsImperial">Imperial (°F, mph)</option>
+                        </select>
+                    </div>
+
+                    <!-- Groq API Key -->
+                    <div class="settings-row settings-row-column">
+                        <label class="settings-label" data-i18n="settings.groqKey">Groq API Key (for AI)</label>
+                        <div class="settings-key-row">
+                            <input type="password" id="groqKeyInput" class="input" placeholder="gsk_..." autocomplete="off">
+                            <button id="groqKeySave" class="btn btn-primary" data-i18n="settings.save">Save</button>
+                        </div>
+                        <small class="settings-help" data-i18n="settings.groqKeyHelp">
+                            Get a free key at console.groq.com/keys
+                        </small>
+                    </div>
+
+                    <!-- OpenWeatherMap API Key -->
+                    <div class="settings-row settings-row-column">
+                        <label class="settings-label">OpenWeatherMap API Key (optional fallback)</label>
+                        <div class="settings-key-row">
+                            <input type="password" id="owmKeyInput" class="input" placeholder="Leave blank to use Open-Meteo only" autocomplete="off">
+                            <button id="owmKeySave" class="btn btn-primary" data-i18n="settings.save">Save</button>
+                        </div>
+                        <small class="settings-help">
+                            Optional. Get a free key at home.openweathermap.org/api_keys
+                        </small>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="settings-row settings-row-column" style="border-top:1px solid var(--border);padding-top:var(--space-md)">
+                        <label class="settings-label" data-i18n="settings.clearData">Data Management</label>
+                        <div class="settings-actions">
+                            <button id="clearDataBtn" class="btn btn-secondary">
+                                <i class="fas fa-trash"></i> Clear All Data
+                            </button>
+                            <button id="exportDataBtn" class="btn btn-secondary">
+                                <i class="fas fa-download"></i> Export Data
+                            </button>
+                            <button id="installPwaBtn2" class="btn btn-secondary" style="display:none">
+                                <i class="fas fa-mobile-alt"></i> Install App
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Health Section -->
-        <section id="health" class="health">
-            <h2 class="section-title">Health Insights</h2>
-            <p style="text-align: center; max-width: 800px; margin: 0 auto 2rem; color: white;">
-                Health conditions and recommendations based on current environmental factors
-            </p>
-            
-            <div class="health-cards" id="healthCards">
-                <!-- Health insights will be populated by JavaScript -->
+        <!-- ============ ABOUT VIEW ============ -->
+        <section class="view" data-view="about">
+            <div class="container section">
+                <h2 class="section-title" data-i18n="nav.about">About</h2>
+                <div class="about-card">
+                    <div class="about-logo">
+                        <i class="fas fa-cloud-sun"></i>
+                    </div>
+                    <h3>EmmiDev Weather 2.0</h3>
+                    <p style="color:var(--text-muted);max-width:600px;margin:0 auto var(--space-lg)">
+                        Africa-first weather intelligence. Built by a student, for the world. Free forever. No ads. No tracking.
+                    </p>
+                    <p style="color:var(--text-muted);font-size:0.9rem">
+                        Made with 💚 in Gulu City, Uganda
+                    </p>
+                </div>
             </div>
         </section>
 
-        <!-- Health Alerts Section -->
-        <section class="alerts">
-            <h2 class="section-title">Health Alerts</h2>
-            <p style="text-align: center; max-width: 800px; margin: 0 auto 2rem;">
-                Important notifications about health-related weather conditions
-            </p>
-            
-            <div class="alert-cards" id="alertCards">
-                <!-- Health alerts will be populated by JavaScript -->
-            </div>
-        </section>
-
-        <!-- Contact Form
-        <section id="about">
-            <h2 class="section-title">Contact Us</h2>
-            <div class="contact-form">
-                <form id="contactForm">
-                    <div class="form-group">
-                        <label for="name">Your Name</label>
-                        <input type="text" id="name" name="name" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Email Address</label>
-                        <input type="email" id="email" name="email" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="subject">Subject</label>
-                        <input type="text" id="subject" name="subject" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Your Message</label>
-                        <textarea id="message" name="message" class="form-control" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Send Message</button>
-                </form>
-            </div>
-        </section> -->
     </main>
 
-    <!-- Premium Subscription Popup -->
-    <div class="popup-overlay" id="premiumPopup">
-        <div class="popup-content">
-            <span class="close-popup" id="closePopup">&times;</span>
-            <h2 class="section-title">Upgrade to EmmiDev Premium</h2>
-            <p style="text-align: center; max-width: 700px; margin: 0 auto 2rem;">
-                Get access to advanced weather forecasting, health alerts, and personalized lifestyle recommendations.
-            </p>
-
-            <div class="features">
-                <div class="feature">
-                    <i class="fas fa-bolt"></i>
-                    <h3>Hyperlocal Forecasts</h3>
-                    <p>Street-level accuracy with minute-by-minute precipitation forecasts.</p>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-map-marked-alt"></i>
-                    <h3>Advanced Radar Maps</h3>
-                    <p>Real-time weather radar, cloud movement, and storm tracking.</p>
-                </div>
-                <div class="feature">
-                    <i class="fas fa-heartbeat"></i>
-                    <h3>Health Alerts</h3>
-                    <p>Pollen count, UV index, air quality, and flu season warnings.</p>
-                </div>
-            </div>
-
-            <div class="plans">
-                <div class="plan">
-                    <div class="plan-header">
-                        <div class="plan-name">Free</div>
-                        <div class="plan-price">$0 <span>/month</span></div>
-                        <div class="plan-desc">Basic weather information</div>
-                    </div>
-                    <div class="plan-body">
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Current weather</li>
-                            <li><i class="fas fa-check"></i> 3-day forecast</li>
-                            <li><i class="fas fa-check"></i> Basic health alerts</li>
-                            <li><i class="fas fa-times"></i> No ads</li>
-                            <li><i class="fas fa-times"></i> Advanced radar</li>
-                            <li><i class="fas fa-times"></i> Historical data</li>
-                        </ul>
-                        <a href="#" class="btn btn-outline" style="width: 100%; text-align: center; color: var(--dark); border-color: var(--dark);">Current Plan</a>
+    <!-- ============================================
+         FOOTER
+         ============================================ -->
+    <footer class="app-footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <h4>EmmiDev Weather</h4>
+                    <p style="font-size:0.9rem">Your Weather, Your World. Free forever.</p>
+                    <div class="social-links" style="margin-top:var(--space)">
+                        <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                        <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
                     </div>
                 </div>
-
-                <div class="plan popular">
-                    <div class="plan-header">
-                        <div class="plan-name">Plus</div>
-                        <div class="plan-price">$4.99 <span>/month</span></div>
-                        <div class="plan-desc">Advanced features</div>
-                    </div>
-                    <div class="plan-body">
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Current weather</li>
-                            <li><i class="fas fa-check"></i> 7-day forecast</li>
-                            <li><i class="fas fa-check"></i> Detailed health alerts</li>
-                            <li><i class="fas fa-check"></i> No ads</li>
-                            <li><i class="fas fa-check"></i> Advanced radar</li>
-                            <li><i class="fas fa-times"></i> Historical data</li>
-                        </ul>
-                        <a href="#" class="btn btn-primary" style="width: 100%; text-align: center;">Upgrade to Plus</a>
-                    </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="#home" data-nav="home">Home</a></li>
+                        <li><a href="#forecast" data-nav="forecast">Forecast</a></li>
+                        <li><a href="#health" data-nav="health">Health</a></li>
+                        <li><a href="#farming" data-nav="farming">Farming</a></li>
+                        <li><a href="#ai" data-nav="ai">AI Assistant</a></li>
+                    </ul>
                 </div>
-
-                <div class="plan">
-                    <div class="plan-header">
-                        <div class="plan-name">Pro</div>
-                        <div class="plan-price">$9.99 <span>/month</span></div>
-                        <div class="plan-desc">Complete weather experience</div>
-                    </div>
-                    <div class="plan-body">
-                        <ul class="plan-features">
-                            <li><i class="fas fa-check"></i> Current weather</li>
-                            <li><i class="fas fa-check"></i> 10-day forecast</li>
-                            <li><i class="fas fa-check"></i> All health alerts</li>
-                            <li><i class="fas fa-check"></i> No ads</li>
-                            <li><i class="fas fa-check"></i> Premium radar</li>
-                            <li><i class="fas fa-check"></i> Historical data</li>
-                        </ul>
-                        <a href="#" class="btn btn-primary" style="width: 100%; text-align: center;">Go Pro</a>
-                    </div>
+                <div class="footer-col">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#about" data-nav="about">About</a></li>
+                        <li><a href="#settings" data-nav="settings">Settings</a></li>
+                        <li><a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a></li>
+                        <li><a href="https://github.com/Fthnath/EmmiDev" target="_blank" rel="noopener">GitHub Repo</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact</h4>
+                    <ul>
+                        <li><i class="fas fa-map-marker-alt"></i> Pece-Laroo, Gulu City</li>
+                        <li><i class="fas fa-phone"></i> +256 770 680 938</li>
+                        <li><i class="fas fa-globe"></i> <a href="https://www.emimidev.com" target="_blank" rel="noopener">emimidev.com</a></li>
+                        <li><i class="fas fa-envelope"></i> support@emimidev.com</li>
+                    </ul>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer>
-        <div class="footer-content">
-            <div class="footer-column">
-                <h3>EmmiDev Weather</h3>
-                <p>Your Weather, Your World. Providing accurate forecasts and lifestyle recommendations worldwide.</p>
-                <div class="social-links">
-                    <a href="#"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-instagram"></i></a>
-                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 EmmiDev Weather. All rights reserved.</p>
             </div>
-            <div class="footer-column">
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#forecast">Forecast</a></li>
-                    <li><a href="#lifestyle">Lifestyle</a></li>
-                    <li><a href="#health">Health</a></li>
-                    <li><a href="#" id="premium-footer-link">Premium</a></li>
-                </ul>
-            </div>
-            <div class="footer-column">
-                <h3>Resources</h3>
-                <ul>
-                    <li><a href="#">Weather API</a></li>
-                    <li><a href="#">Radar Maps</a></li>
-                    <li><a href="#">Weather Blog</a></li>
-                    <li><a href="#">FAQ</a></li>
-                    <li><a href="#">Support Center</a></li>
-                </ul>
-            </div>
-            <div class="footer-column">
-                <h3>Contact Info</h3>
-                <ul>
-                    <li><i class="fas fa-map-marker-alt"></i> Pece-Laroo, Gulu City</li>
-                    <li><i class="fas fa-phone"></i> +256 770 680 938</li>
-                    <li><i class="fas fa-fax"></i> +256 770 680 939</li>
-                    <li><i class="fas fa-globe"></i><a href="https://www.emimidev.com" target="_blank"> www.emimidev.com</a></li>
-                    <li><i class="fas fa-envelope"></i> eolara68@gmail.com</li>
-                    <li><i class="fas fa-envelope"></i> support@emimidev.com</li>
-                </ul>
-            </div>
-        </div>
-        <div class="copyright">
-            <p>&copy; 2025 EmmiDev Weather. All rights reserved.</p>
         </div>
     </footer>
+
+    <!-- Toast container (managed by toast.js) -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <!-- Main ES Module Entry -->
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
-
-

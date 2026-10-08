@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "EmmiDev Weather",
+    "tagline": "Your Weather, Your World",
+    "loading": "Loading...",
+    "error": "Something went wrong",
+    "retry": "Retry"
+  },
+  "nav": {
+    "home": "Home",
+    "forecast": "Forecast",
+    "maps": "Maps",
+    "health": "Health",
+    "farming": "Farming",
+    "ai": "AI Assistant",
+    "locations": "Locations",
+    "history": "History",
+    "settings": "Settings",
+    "about": "About"
+  },
+  "search": {
+    "placeholder": "Enter your city name",
+    "button": "Search",
+    "recent": "RECENT SEARCHES",
+    "noResults": "No cities found",
+    "detecting": "Detecting your location..."
+  },
+  "current": {
+    "title": "Current Weather",
+    "feelsLike": "Feels like",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "pressure": "Pressure",
+    "visibility": "Visibility",
+    "uvIndex": "UV Index",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "updated": "Updated"
+  },
+  "forecast": {
+    "title": "10-Day Forecast",
+    "hourly": "Hourly Forecast",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "high": "High",
+    "low": "Low",
+    "precip": "Precipitation"
+  },
+  "lifestyle": {
+    "title": "Lifestyle Recommendations",
+    "subtitle": "Personalized suggestions based on current weather conditions",
+    "activities": "Outdoor Activities",
+    "clothing": "Clothing Advice",
+    "food": "Food & Nutrition",
+    "exercise": "Exercise"
+  },
+  "health": {
+    "title": "Health Insights",
+    "subtitle": "Health conditions and recommendations based on current environmental factors",
+    "airQuality": "Air Quality",
+    "uvIndex": "UV Index",
+    "pollen": "Pollen Count",
+    "malariaRisk": "Malaria Risk",
+    "dengueRisk": "Dengue Risk",
+    "meningitisRisk": "Meningitis Risk",
+    "respiratoryRisk": "Respiratory Risk",
+    "heatStress": "Heat Stress",
+    "dehydration": "Dehydration Risk",
+    "migraine": "Migraine Risk",
+    "arthritis": "Arthritis Index",
+    "asthma": "Asthma/COPD Risk",
+    "cardiovascular": "Cardiovascular Stress",
+    "sleepQuality": "Sleep Quality",
+    "waterQuality": "Water Quality Risk",
+    "risks": {
+      "low": "Low",
+      "moderate": "Moderate",
+      "high": "High",
+      "extreme": "Extreme"
+    }
+  },
+  "farming": {
+    "title": "Farming Advisor",
+    "subtitle": "Agricultural guidance for your location",
+    "planting": "Planting Advisory",
+    "spraying": "Spray Advisory",
+    "irrigation": "Irrigation Need",
+    "frost": "Frost Warning",
+    "harvest": "Harvest Window",
+    "pest": "Pest Risk",
+    "livestock": "Livestock Advisory",
+    "waterHarvest": "Water Harvest Estimate",
+    "crops": "Crops"
+  },
+  "ai": {
+    "title": "AI Weather Assistant",
+    "placeholder": "Ask me anything about the weather...",
+    "send": "Send",
+    "thinking": "Thinking...",
+    "suggestions": {
+      "rain": "Will it rain today?",
+      "outfit": "What should I wear?",
+      "activity": "Best time for outdoor activity?",
+      "farming": "When should I plant?",
+      "travel": "Best day for travel this week?"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeAuto": "Auto",
+    "units": "Units",
+    "unitsMetric": "Metric (°C, km/h)",
+    "unitsImperial": "Imperial (°F, mph)",
+    "apiKeys": "API Keys",
+    "groqKey": "Groq API Key (for AI)",
+    "groqKeyHelp": "Get a free key at console.groq.com/keys",
+    "save": "Save",
+    "saved": "Saved!",
+    "clearData": "Clear All Data",
+    "exportData": "Export Data",
+    "importData": "Import Data"
+  },
+  "weather": {
+    "clear": "Clear",
+    "clouds": "Cloudy",
+    "rain": "Rain",
+    "drizzle": "Drizzle",
+    "thunderstorm": "Thunderstorm",
+    "snow": "Snow",
+    "fog": "Fog",
+    "mist": "Mist",
+    "windy": "Windy"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "km/h",
+    "mph": "mph",
+    "mm": "mm",
+    "in": "in"
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "EmmiDev 天气",
+    "tagline": "你的天气，你的世界",
+    "loading": "加载中...",
+    "error": "出现问题",
+    "retry": "重试"
+  },
+  "nav": {
+    "home": "首页",
+    "forecast": "预报",
+    "maps": "地图",
+    "health": "健康",
+    "farming": "农业",
+    "ai": "AI助手",
+    "locations": "地点",
+    "history": "历史",
+    "settings": "设置",
+    "about": "关于"
+  },
+  "search": {
+    "placeholder": "输入城市名称",
+    "button": "搜索",
+    "recent": "最近搜索",
+    "noResults": "未找到城市",
+    "detecting": "正在检测您的位置..."
+  },
+  "current": {
+    "title": "当前天气",
+    "feelsLike": "体感温度",
+    "humidity": "湿度",
+    "wind": "风速",
+    "pressure": "气压",
+    "visibility": "能见度",
+    "uvIndex": "紫外线指数",
+    "sunrise": "日出",
+    "sunset": "日落",
+    "updated": "更新于"
+  },
+  "forecast": {
+    "title": "10天预报",
+    "hourly": "逐小时预报",
+    "today": "今天",
+    "tomorrow": "明天",
+    "high": "最高",
+    "low": "最低",
+    "precip": "降水"
+  },
+  "lifestyle": {
+    "title": "生活方式建议",
+    "subtitle": "根据当前天气条件提供的个性化建议",
+    "activities": "户外活动",
+    "clothing": "穿衣建议",
+    "food": "饮食营养",
+    "exercise": "锻炼"
+  },
+  "health": {
+    "title": "健康洞察",
+    "subtitle": "基于当前环境因素的健康状况和建议",
+    "airQuality": "空气质量",
+    "uvIndex": "紫外线指数",
+    "pollen": "花粉计数",
+    "malariaRisk": "疟疾风险",
+    "dengueRisk": "登革热风险",
+    "meningitisRisk": "脑膜炎风险",
+    "respiratoryRisk": "呼吸系统风险",
+    "heatStress": "热应激",
+    "dehydration": "脱水风险",
+    "migraine": "偏头痛风险",
+    "arthritis": "关节炎指数",
+    "asthma": "哮喘风险",
+    "cardiovascular": "心血管压力",
+    "sleepQuality": "睡眠质量",
+    "waterQuality": "水质风险",
+    "risks": {
+      "low": "低",
+      "moderate": "中",
+      "high": "高",
+      "extreme": "极高"
+    }
+  },
+  "farming": {
+    "title": "农业顾问",
+    "subtitle": "针对您所在地区的农业指导",
+    "planting": "种植建议",
+    "spraying": "喷洒建议",
+    "irrigation": "灌溉需求",
+    "frost": "霜冻警告",
+    "harvest": "收获窗口",
+    "pest": "病虫害风险",
+    "livestock": "牲畜建议",
+    "waterHarvest": "雨水收集估算",
+    "crops": "作物"
+  },
+  "ai": {
+    "title": "AI天气助手",
+    "placeholder": "问我任何天气问题...",
+    "send": "发送",
+    "thinking": "思考中...",
+    "suggestions": {
+      "rain": "今天会下雨吗？",
+      "outfit": "我该穿什么？",
+      "activity": "户外活动的最佳时间？",
+      "farming": "什么时候种植？",
+      "travel": "本周适合旅行的最佳日子？"
+    }
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "theme": "主题",
+    "themeLight": "浅色",
+    "themeDark": "深色",
+    "themeAuto": "自动",
+    "units": "单位",
+    "unitsMetric": "公制（°C，km/h）",
+    "unitsImperial": "英制（°F，mph）",
+    "apiKeys": "API密钥",
+    "groqKey": "Groq API密钥（用于AI）",
+    "groqKeyHelp": "在console.groq.com/keys获取免费密钥",
+    "save": "保存",
+    "saved": "已保存！",
+    "clearData": "清除所有数据",
+    "exportData": "导出数据",
+    "importData": "导入数据"
+  },
+  "weather": {
+    "clear": "晴",
+    "clouds": "多云",
+    "rain": "雨",
+    "drizzle": "小雨",
+    "thunderstorm": "雷暴",
+    "snow": "雪",
+    "fog": "雾",
+    "mist": "薄雾",
+    "windy": "大风"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "千米/时",
+    "mph": "英里/时",
+    "mm": "毫米",
+    "in": "英寸"
+  }
+}

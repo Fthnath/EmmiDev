@@ -1,0 +1,140 @@
+/* ============================================
+   EmmiDev Weather — Theme Variables
+   ============================================ */
+
+:root {
+    /* Brand */
+    --primary: #1a73e8;
+    --primary-dark: #0f4c97;
+    --primary-light: #4a9eff;
+    --accent: #ff6b01;
+    --accent-dark: #e55f00;
+    
+    /* Status */
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --info: #06b6d4;
+    
+    /* Neutrals — Light Mode */
+    --bg: #f0f4f8;
+    --bg-elevated: #ffffff;
+    --bg-sunken: #e4e9f0;
+    --surface: #ffffff;
+    --surface-hover: #f8fafc;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    
+    /* Text */
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-subtle: #94a3b8;
+    --text-inverse: #ffffff;
+    
+    /* Gradients */
+    --gradient-sunny: linear-gradient(135deg, #ff9d00, #ffd700, #87ceeb);
+    --gradient-rainy: linear-gradient(135deg, #2c3e50, #3498db, #bdc3c7);
+    --gradient-cloudy: linear-gradient(135deg, #636363, #a2abbb, #a2abbb);
+    --gradient-default: linear-gradient(135deg, #1a2980, #26d0ce);
+    --gradient-health: linear-gradient(135deg, #4facfe, #00f2fe);
+    --gradient-lifestyle: linear-gradient(135deg, #fa709a, #fee140);
+    --gradient-farm: linear-gradient(135deg, #11998e, #38ef7d);
+    --gradient-night: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.16);
+    
+    /* Radius */
+    --radius-sm: 6px;
+    --radius: 12px;
+    --radius-lg: 18px;
+    --radius-xl: 24px;
+    --radius-full: 9999px;
+    
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space: 1rem;
+    --space-md: 1.5rem;
+    --space-lg: 2rem;
+    --space-xl: 3rem;
+    --space-2xl: 5rem;
+    
+    /* Typography */
+    --font-sans: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+    
+    /* Transitions */
+    --t-fast: 150ms ease;
+    --t: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+    --t-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    
+    /* Layout */
+    --container: 1200px;
+    --nav-height: 64px;
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+
+[data-theme="dark"] {
+    --bg: #0a0a15;
+    --bg-elevated: #14142b;
+    --bg-sunken: #05050d;
+    --surface: #1a1a2e;
+    --surface-hover: #232340;
+    --border: #2a2a45;
+    --border-strong: #3a3a5c;
+    
+    --text: #f0f4f8;
+    --text-muted: #94a3b8;
+    --text-subtle: #64748b;
+    --text-inverse: #0f172a;
+    
+    --primary: #4a9eff;
+    --primary-dark: #1a73e8;
+    
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.6);
+    
+    --gradient-default: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+}
+
+/* ============================================
+   AUTO MODE — follows system
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+    [data-theme-mode="auto"] {
+        --bg: #0a0a15;
+        --bg-elevated: #14142b;
+        --bg-sunken: #05050d;
+        --surface: #1a1a2e;
+        --surface-hover: #232340;
+        --border: #2a2a45;
+        --border-strong: #3a3a5c;
+        --text: #f0f4f8;
+        --text-muted: #94a3b8;
+        --text-subtle: #64748b;
+        --text-inverse: #0f172a;
+        --primary: #4a9eff;
+    }
+}
+
+/* ============================================
+   RTL Support (Arabic)
+   ============================================ */
+
+[dir="rtl"] {
+    text-align: right;
+}
+
+[dir="rtl"] .rtl-flip {
+    transform: scaleX(-1);
+}

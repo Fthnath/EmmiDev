@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "EmmiDev Hali ya Hewa",
+    "tagline": "Hali yako ya hewa, ulimwengu wako",
+    "loading": "Inapakia...",
+    "error": "Kuna kitu kilienda vibaya",
+    "retry": "Jaribu tena"
+  },
+  "nav": {
+    "home": "Nyumbani",
+    "forecast": "Utabiri",
+    "maps": "Ramani",
+    "health": "Afya",
+    "farming": "Kilimo",
+    "ai": "Msaidizi wa AI",
+    "locations": "Maeneo",
+    "history": "Historia",
+    "settings": "Mipangilio",
+    "about": "Kuhusu"
+  },
+  "search": {
+    "placeholder": "Weka jina la mji wako",
+    "button": "Tafuta",
+    "recent": "UTAFUTAJI WA HIVI KARIBUNI",
+    "noResults": "Hakuna miji iliyopatikana",
+    "detecting": "Inatambua eneo lako..."
+  },
+  "current": {
+    "title": "Hali ya Hewa ya Sasa",
+    "feelsLike": "Inahisi kama",
+    "humidity": "Unyevu",
+    "wind": "Upepo",
+    "pressure": "Shinikizo",
+    "visibility": "Uonekano",
+    "uvIndex": "Kiwango cha UV",
+    "sunrise": "Kuchwa kwa jua",
+    "sunset": "Kutua kwa jua",
+    "updated": "Imesasishwa"
+  },
+  "forecast": {
+    "title": "Utabiri wa Siku 10",
+    "hourly": "Utabiri wa Kila Saa",
+    "today": "Leo",
+    "tomorrow": "Kesho",
+    "high": "Juu",
+    "low": "Chini",
+    "precip": "Mvua"
+  },
+  "lifestyle": {
+    "title": "Mapendekezo ya Maisha",
+    "subtitle": "Mapendekezo ya kibinafsi kulingana na hali ya hewa ya sasa",
+    "activities": "Shughuli za Nje",
+    "clothing": "Ushauri wa Mavazi",
+    "food": "Chakula na Lishe",
+    "exercise": "Mazoezi"
+  },
+  "health": {
+    "title": "Maarifa ya Afya",
+    "subtitle": "Hali za kiafya na mapendekezo kulingana na mazingira ya sasa",
+    "airQuality": "Ubora wa Hewa",
+    "uvIndex": "Kiwango cha UV",
+    "pollen": "Kiwango cha Poleni",
+    "malariaRisk": "Hatari ya Malaria",
+    "dengueRisk": "Hatari ya Dengue",
+    "meningitisRisk": "Hatari ya Meninjitisi",
+    "respiratoryRisk": "Hatari ya Kupumua",
+    "heatStress": "Msongo wa Joto",
+    "dehydration": "Hatari ya Upungufu wa Maji",
+    "migraine": "Hatari ya Kichwa Kuuma",
+    "arthritis": "Kiwango cha Baridi Yabisi",
+    "asthma": "Hatari ya Pumu",
+    "cardiovascular": "Msongo wa Moyo",
+    "sleepQuality": "Ubora wa Usingizi",
+    "waterQuality": "Hatari ya Ubora wa Maji",
+    "risks": {
+      "low": "Chini",
+      "moderate": "Wastani",
+      "high": "Juu",
+      "extreme": "Kali sana"
+    }
+  },
+  "farming": {
+    "title": "Mshauri wa Kilimo",
+    "subtitle": "Mwongozo wa kilimo kwa eneo lako",
+    "planting": "Ushauri wa Kupanda",
+    "spraying": "Ushauri wa Kunyunyiza",
+    "irrigation": "Uhitaji wa Umwagiliaji",
+    "frost": "Onyo la Baridi",
+    "harvest": "Dirisha la Mavuno",
+    "pest": "Hatari ya Wadudu",
+    "livestock": "Ushauri wa Mifugo",
+    "waterHarvest": "Makadirio ya Kuvuna Maji",
+    "crops": "Mazao"
+  },
+  "ai": {
+    "title": "Msaidizi wa Hali ya Hewa wa AI",
+    "placeholder": "Niulize chochote kuhusu hali ya hewa...",
+    "send": "Tuma",
+    "thinking": "Inafikiri...",
+    "suggestions": {
+      "rain": "Itanyesha leo?",
+      "outfit": "Nivae nini?",
+      "activity": "Wakati mzuri wa shughuli za nje?",
+      "farming": "Nipande lini?",
+      "travel": "Siku bora ya safari wiki hii?"
+    }
+  },
+  "settings": {
+    "title": "Mipangilio",
+    "language": "Lugha",
+    "theme": "Mandhari",
+    "themeLight": "Nuru",
+    "themeDark": "Giza",
+    "themeAuto": "Otomatiki",
+    "units": "Vipimo",
+    "unitsMetric": "Metriki (°C, km/h)",
+    "unitsImperial": "Imperial (°F, mph)",
+    "apiKeys": "Funguo za API",
+    "groqKey": "Ufunguo wa Groq API (kwa AI)",
+    "groqKeyHelp": "Pata ufunguo bure kwa console.groq.com/keys",
+    "save": "Hifadhi",
+    "saved": "Imehifadhiwa!",
+    "clearData": "Futa Data Zote",
+    "exportData": "Hamisha Data",
+    "importData": "Ingiza Data"
+  },
+  "weather": {
+    "clear": "Safii",
+    "clouds": "Mawingu",
+    "rain": "Mvua",
+    "drizzle": "Manyunyu",
+    "thunderstorm": "Ngurumo",
+    "snow": "Theluji",
+    "fog": "Ukungu",
+    "mist": "Ukungu mwepesi",
+    "windy": "Upepo mkali"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "km/h",
+    "mph": "mph",
+    "mm": "mm",
+    "in": "in"
+  }
+}

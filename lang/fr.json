@@ -1,0 +1,219 @@
+{
+  "app": {
+    "name": "EmmiDev Météo",
+    "tagline": "Votre météo, votre monde",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer"
+  },
+  "nav": {
+    "home": "Accueil",
+    "forecast": "Prévisions",
+    "maps": "Cartes",
+    "health": "Santé",
+    "farming": "Agriculture",
+    "ai": "Assistant IA",
+    "locations": "Lieux",
+    "history": "Historique",
+    "settings": "Paramètres",
+    "about": "À propos"
+  },
+  "search": {
+    "placeholder": "Entrez le nom de votre ville",
+    "button": "Rechercher",
+    "recent": "RECHERCHES RÉCENTES",
+    "noResults": "Aucune ville trouvée",
+    "detecting": "Détection de votre position..."
+  },
+  "current": {
+    "title": "Météo actuelle",
+    "feelsLike": "Ressenti",
+    "humidity": "Humidité",
+    "wind": "Vent",
+    "pressure": "Pression",
+    "visibility": "Visibilité",
+    "uvIndex": "Indice UV",
+    "sunrise": "Lever du soleil",
+    "sunset": "Coucher du soleil",
+    "updated": "Mis à jour"
+  },
+  "forecast": {
+    "title": "Prévisions sur 10 jours",
+    "hourly": "Prévisions horaires",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "high": "Max",
+    "low": "Min",
+    "precip": "Précipitations"
+  },
+  "lifestyle": {
+    "title": "Recommandations de style de vie",
+    "subtitle": "Suggestions personnalisées selon la météo actuelle",
+    "activities": "Activités extérieures",
+    "clothing": "Conseils vestimentaires",
+    "food": "Alimentation et nutrition",
+    "exercise": "Exercice"
+  },
+  "health": {
+    "title": "Aperçu santé",
+    "subtitle": "Conditions de santé et recommandations",
+    "airQuality": "Qualité de l'air",
+    "uvIndex": "Indice UV",
+    "pollen": "Pollen",
+    "malariaRisk": "Risque de paludisme",
+    "dengueRisk": "Risque de dengue",
+    "meningitisRisk": "Risque de méningite",
+    "respiratoryRisk": "Risque respiratoire",
+    "heatStress": "Stress thermique",
+    "dehydration": "Risque de déshydratation",
+    "migraine": "Risque de migraine",
+    "arthritis": "Indice d'arth
+
+
+cat > /workspaces/EmmiDev/lang/fr.json << 'FR_EOF'
+{
+  "app": {
+    "name": "EmmiDev Météo",
+    "tagline": "Votre météo, votre monde",
+    "loading": "Chargement...",
+    "error": "Une erreur est survenue",
+    "retry": "Réessayer"
+  },
+  "nav": {
+    "home": "Accueil",
+    "forecast": "Prévisions",
+    "maps": "Cartes",
+    "health": "Santé",
+    "farming": "Agriculture",
+    "ai": "Assistant IA",
+    "locations": "Lieux",
+    "history": "Historique",
+    "settings": "Paramètres",
+    "about": "À propos"
+  },
+  "search": {
+    "placeholder": "Entrez le nom de votre ville",
+    "button": "Rechercher",
+    "recent": "RECHERCHES RÉCENTES",
+    "noResults": "Aucune ville trouvée",
+    "detecting": "Détection de votre position..."
+  },
+  "current": {
+    "title": "Météo actuelle",
+    "feelsLike": "Ressenti",
+    "humidity": "Humidité",
+    "wind": "Vent",
+    "pressure": "Pression",
+    "visibility": "Visibilité",
+    "uvIndex": "Indice UV",
+    "sunrise": "Lever du soleil",
+    "sunset": "Coucher du soleil",
+    "updated": "Mis à jour"
+  },
+  "forecast": {
+    "title": "Prévisions sur 10 jours",
+    "hourly": "Prévisions horaires",
+    "today": "Aujourd'hui",
+    "tomorrow": "Demain",
+    "high": "Max",
+    "low": "Min",
+    "precip": "Précipitations"
+  },
+  "lifestyle": {
+    "title": "Recommandations de style de vie",
+    "subtitle": "Suggestions personnalisées selon la météo actuelle",
+    "activities": "Activités extérieures",
+    "clothing": "Conseils vestimentaires",
+    "food": "Alimentation et nutrition",
+    "exercise": "Exercice"
+  },
+  "health": {
+    "title": "Aperçu santé",
+    "subtitle": "Conditions de santé et recommandations",
+    "airQuality": "Qualité de l'air",
+    "uvIndex": "Indice UV",
+    "pollen": "Pollen",
+    "malariaRisk": "Risque de paludisme",
+    "dengueRisk": "Risque de dengue",
+    "meningitisRisk": "Risque de méningite",
+    "respiratoryRisk": "Risque respiratoire",
+    "heatStress": "Stress thermique",
+    "dehydration": "Risque de déshydratation",
+    "migraine": "Risque de migraine",
+    "arthritis": "Indice d'arthrite",
+    "asthma": "Risque d'asthme",
+    "cardiovascular": "Stress cardiovasculaire",
+    "sleepQuality": "Qualité du sommeil",
+    "waterQuality": "Risque lié à l'eau",
+    "risks": {
+      "low": "Faible",
+      "moderate": "Modéré",
+      "high": "Élevé",
+      "extreme": "Extrême"
+    }
+  },
+  "farming": {
+    "title": "Conseiller agricole",
+    "subtitle": "Conseils agricoles pour votre région",
+    "planting": "Conseil de plantation",
+    "spraying": "Conseil de pulvérisation",
+    "irrigation": "Besoin d'irrigation",
+    "frost": "Alerte gel",
+    "harvest": "Période de récolte",
+    "pest": "Risque de ravageurs",
+    "livestock": "Conseil pour le bétail",
+    "waterHarvest": "Estimation de collecte d'eau",
+    "crops": "Cultures"
+  },
+  "ai": {
+    "title": "Assistant météo IA",
+    "placeholder": "Posez-moi une question sur la météo...",
+    "send": "Envoyer",
+    "thinking": "Réflexion...",
+    "suggestions": {
+      "rain": "Va-t-il pleuvoir aujourd'hui ?",
+      "outfit": "Que dois-je porter ?",
+      "activity": "Meilleur moment pour sortir ?",
+      "farming": "Quand planter ?",
+      "travel": "Meilleur jour pour voyager cette semaine ?"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "theme": "Thème",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeAuto": "Auto",
+    "units": "Unités",
+    "unitsMetric": "Métrique (°C, km/h)",
+    "unitsImperial": "Impérial (°F, mph)",
+    "apiKeys": "Clés API",
+    "groqKey": "Clé API Groq (pour l'IA)",
+    "groqKeyHelp": "Obtenez une clé gratuite sur console.groq.com/keys",
+    "save": "Enregistrer",
+    "saved": "Enregistré !",
+    "clearData": "Effacer toutes les données",
+    "exportData": "Exporter les données",
+    "importData": "Importer des données"
+  },
+  "weather": {
+    "clear": "Dégagé",
+    "clouds": "Nuageux",
+    "rain": "Pluie",
+    "drizzle": "Bruine",
+    "thunderstorm": "Orage",
+    "snow": "Neige",
+    "fog": "Brouillard",
+    "mist": "Brume",
+    "windy": "Venteux"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "km/h",
+    "mph": "mph",
+    "mm": "mm",
+    "in": "in"
+  }
+}

@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "EmmiDev Obudde",
+    "tagline": "Obudde bwo, Ensi yo",
+    "loading": "Kikwatibwa...",
+    "error": "Waliwo ekikyamu",
+    "retry": "Ddamu ogezeeko"
+  },
+  "nav": {
+    "home": "Awaka",
+    "forecast": "Obulango",
+    "maps": "Mapa",
+    "health": "Obulamu",
+    "farming": "Bulimi",
+    "ai": "Omuyambi wa AI",
+    "locations": "Ebifo",
+    "history": "Ebyafaayo",
+    "settings": "Entegeka",
+    "about": "Ku Tukwatako"
+  },
+  "search": {
+    "placeholder": "Wandiika erinnya ly'ekibuga kyo",
+    "button": "Noonya",
+    "recent": "EBINOONYEBBWA EBIWERA",
+    "noResults": "Tewali bibuga bibye",
+    "detecting": "Tuzuula obudde bwo..."
+  },
+  "current": {
+    "title": "Obudde bwa Kaakano",
+    "feelsLike": "Kiwulikika nga",
+    "humidity": "Ettutu",
+    "wind": "Empewo",
+    "pressure": "Okusindika",
+    "visibility": "Okulaba",
+    "uvIndex": "Ebbanga lya UV",
+    "sunrise": "Enjuba evaayo",
+    "sunset": "Enjuba egwa",
+    "updated": "Kikyusiddwa"
+  },
+  "forecast": {
+    "title": "Obulango bwa nnaku 10",
+    "hourly": "Obulango bwa ssa ez'enjawulo",
+    "today": "Leero",
+    "tomorrow": "Enkya",
+    "high": "Waggulu",
+    "low": "Wansi",
+    "precip": "Enkuba"
+  },
+  "lifestyle": {
+    "title": "Amagezi ku Bulamu",
+    "subtitle": "Amagezi agakwata ku bulamu bwo ng'osinziira ku budde",
+    "activities": "Emirimu egy'ebweru",
+    "clothing": "Amagezi ku by'okwambala",
+    "food": "Emmere n'Endya",
+    "exercise": "Okukola dduyiro"
+  },
+  "health": {
+    "title": "Amagezi ku Bulamu",
+    "subtitle": "Embeera z'obulamu n'amagezi ku butonde",
+    "airQuality": "Obulungi bw'Empewo",
+    "uvIndex": "Ebbanga lya UV",
+    "pollen": "Obungi bwa Poleni",
+    "malariaRisk": "Obulabe bwa Malaliya",
+    "dengueRisk": "Obulabe bwa Dengue",
+    "meningitisRisk": "Obulabe bwa Meninjitisi",
+    "respiratoryRisk": "Obulabe bw'Okussa",
+    "heatStress": "Obuzibu bw'Ebbugumu",
+    "dehydration": "Obulabe bw'Amazzi Mu Mubiri",
+    "migraine": "Obulabe bw'Omutwe",
+    "arthritis": "Obuzibu bw'Amagumba",
+    "asthma": "Obulabe bwa Asima",
+    "cardiovascular": "Obuzibu bw'Omutima",
+    "sleepQuality": "Obulungi bw'Otulo",
+    "waterQuality": "Obulabe bw'Amazzi",
+    "risks": {
+      "low": "Wansi",
+      "moderate": "Wakati",
+      "high": "Waggulu",
+      "extreme": "Kya maanyi nnyo"
+    }
+  },
+  "farming": {
+    "title": "Omuyambi wa Bulimi",
+    "subtitle": "Amagezi ku bulimi mu kifo kyo",
+    "planting": "Amagezi ku Kusimba",
+    "spraying": "Amagezi ku Kufuuwako",
+    "irrigation": "Obwetaavu bw'Amazzi",
+    "frost": "Okulabula ku Bunnyogovu",
+    "harvest": "Ekiseera ky'Amauno",
+    "pest": "Obulabe bwa Biwuka",
+    "livestock": "Amagezi ku Bisolo",
+    "waterHarvest": "Okugerekera Amazzi",
+    "crops": "Ebirime"
+  },
+  "ai": {
+    "title": "Omuyambi wa AI ku Budde",
+    "placeholder": "Mbuuza ku budde...",
+    "send": "Sindika",
+    "thinking": "Akirowooza...",
+    "suggestions": {
+      "rain": "Enkuba egenda kutonnya leero?",
+      "outfit": "Nnyambale ki?",
+      "activity": "Ssa ki ennungi okukola ebweru?",
+      "farming": "Nsimbe ddi?",
+      "travel": "Lunaku ki olulungi olugendo wiiki eno?"
+    }
+  },
+  "settings": {
+    "title": "Entegeka",
+    "language": "Olulimi",
+    "theme": "Endabika",
+    "themeLight": "Kitangaala",
+    "themeDark": "Kizikiza",
+    "themeAuto": "Kyekyusa",
+    "units": "Ebipimo",
+    "unitsMetric": "Metriki (°C, km/h)",
+    "unitsImperial": "Impiriya (°F, mph)",
+    "apiKeys": "Bakasi za API",
+    "groqKey": "Bakasi ya Groq API (ku AI)",
+    "groqKeyHelp": "Funa bakasi ey'ubuntu ku console.groq.com/keys",
+    "save": "Tereka",
+    "saved": "Kiterekddwa!",
+    "clearData": "Sazaamu Data Yonna",
+    "exportData": "Fulumya Data",
+    "importData": "Yingiza Data"
+  },
+  "weather": {
+    "clear": "Malamu",
+    "clouds": "Bire",
+    "rain": "Enkuba",
+    "drizzle": "Obutongotongo",
+    "thunderstorm": "Okubwatuka",
+    "snow": "Olubumbi",
+    "fog": "Ekifu",
+    "mist": "Ekifu ekyangu",
+    "windy": "Empewo ey'amaanyi"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "km/h",
+    "mph": "mph",
+    "mm": "mm",
+    "in": "in"
+  }
+}

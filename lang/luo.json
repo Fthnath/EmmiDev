@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "EmmiDev Yamo",
+    "tagline": "Yamo mari, Piny mari",
+    "loading": "Iketo...",
+    "error": "Gimoro okethore",
+    "retry": "Tem kendo"
+  },
+  "nav": {
+    "home": "Ot",
+    "forecast": "Siem",
+    "maps": "Map",
+    "health": "Ngima",
+    "farming": "Pur",
+    "ai": "Jakony AI",
+    "locations": "Kuonde",
+    "history": "Sigruok",
+    "settings": "Chenro",
+    "about": "Kuom wa"
+  },
+  "search": {
+    "placeholder": "Ndik nying dala mari",
+    "button": "Many",
+    "recent": "MANY MANOKE",
+    "noResults": "Onge dala mokwanore",
+    "detecting": "Waneno kuonde mari..."
+  },
+  "current": {
+    "title": "Yamo Sani",
+    "feelsLike": "Winjore ka",
+    "humidity": "Yugi",
+    "wind": "Yamo",
+    "pressure": "Dino",
+    "visibility": "Neno",
+    "uvIndex": "Ler mar UV",
+    "sunrise": "Wuok chieng'",
+    "sunset": "Podho chieng'",
+    "updated": "Olok"
+  },
+  "forecast": {
+    "title": "Siem mar ndalo 10",
+    "hourly": "Siem mar saa",
+    "today": "Kawuono",
+    "tomorrow": "Kiny",
+    "high": "Maloo",
+    "low": "Piny",
+    "precip": "Koth"
+  },
+  "lifestyle": {
+    "title": "Puonj mar Ngima",
+    "subtitle": "Puonj motayore kuom kit yamo",
+    "activities": "Tich mokwongo oko",
+    "clothing": "Puonj mar lewni",
+    "food": "Chiemo gi Ritruok",
+    "exercise": "Tich mar ringruok"
+  },
+  "health": {
+    "title": "Rieko mar Ngima",
+    "subtitle": "Kit ngima kod puonj kuom yamo",
+    "airQuality": "Ber mar Yamo",
+    "uvIndex": "Ler mar UV",
+    "pollen": "Ler mar Polen",
+    "malariaRisk": "Chandruok mar Malaria",
+    "dengueRisk": "Chandruok mar Dengue",
+    "meningitisRisk": "Chandruok mar Meningitis",
+    "respiratoryRisk": "Chandruok mar Yweyo",
+    "heatStress": "Chandruok mar Lilo",
+    "dehydration": "Chandruok mar Pi e Ringruok",
+    "migraine": "Chandruok mar Wiye",
+    "arthritis": "Chandruok mar Choke",
+    "asthma": "Chandruok mar Asthma",
+    "cardiovascular": "Chandruok mar Chuny",
+    "sleepQuality": "Ber mar Nindo",
+    "waterQuality": "Chandruok mar Pi",
+    "risks": {
+      "low": "Piny",
+      "moderate": "Dik",
+      "high": "Maloo",
+      "extreme": "Rach ahinya"
+    }
+  },
+  "farming": {
+    "title": "Jakony mar Pur",
+    "subtitle": "Puonj mar pur e kuonde mari",
+    "planting": "Puonj mar Chielo",
+    "spraying": "Puonj mar Nyuny",
+    "irrigation": "Dwok mar Pi",
+    "frost": "Siem mar Koyo",
+    "harvest": "Saa mar Keyo",
+    "pest": "Chandruok mar Kute",
+    "livestock": "Puonj mar Le",
+    "waterHarvest": "Kwano mar Keyo Pi",
+    "crops": "Chiembe"
+  },
+  "ai": {
+    "title": "Jakony AI mar Yamo",
+    "placeholder": "Penja gimoro amora kuom yamo...",
+    "send": "Or",
+    "thinking": "Paro...",
+    "suggestions": {
+      "rain": "Koth biro chwe kawuono?",
+      "outfit": "Abiro rwako ang'o?",
+      "activity": "Saa maber mar tich oko?",
+      "farming": "Abiro chielo kar ang'o?",
+      "travel": "Odiechieng' maber mar wuoth juma ka?"
+    }
+  },
+  "settings": {
+    "title": "Chenro",
+    "language": "Dhok",
+    "theme": "Kit neno",
+    "themeLight": "Ler",
+    "themeDark": "Nyar",
+    "themeAuto": "Kende",
+    "units": "Pimo",
+    "unitsMetric": "Metric (°C, km/h)",
+    "unitsImperial": "Imperial (°F, mph)",
+    "apiKeys": "Rapim mar API",
+    "groqKey": "Rapim mar Groq API (ne AI)",
+    "groqKeyHelp": "Yud rapim nono e console.groq.com/keys",
+    "save": "Kan",
+    "saved": "Okane!",
+    "clearData": "Kwany Data Duto",
+    "exportData": "Kelo Data",
+    "importData": "Keto Data"
+  },
+  "weather": {
+    "clear": "Ler",
+    "clouds": "Boche",
+    "rain": "Koth",
+    "drizzle": "Koth matin",
+    "thunderstorm": "Kugni",
+    "snow": "Pe",
+    "fog": "Okungu",
+    "mist": "Okungu matin",
+    "windy": "Yamo matek"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "km/h",
+    "mph": "mph",
+    "mm": "mm",
+    "in": "in"
+  }
+}

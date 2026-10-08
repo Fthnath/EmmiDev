@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "إميديف الطقس",
+    "tagline": "طقسك، عالمك",
+    "loading": "جاري التحميل...",
+    "error": "حدث خطأ ما",
+    "retry": "إعادة المحاولة"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "forecast": "التوقعات",
+    "maps": "الخرائط",
+    "health": "الصحة",
+    "farming": "الزراعة",
+    "ai": "مساعد الذكاء الاصطناعي",
+    "locations": "المواقع",
+    "history": "السجل",
+    "settings": "الإعدادات",
+    "about": "حول"
+  },
+  "search": {
+    "placeholder": "أدخل اسم مدينتك",
+    "button": "بحث",
+    "recent": "البحث الأخير",
+    "noResults": "لم يتم العثور على مدن",
+    "detecting": "جاري تحديد موقعك..."
+  },
+  "current": {
+    "title": "الطقس الحالي",
+    "feelsLike": "يشعر كأنه",
+    "humidity": "الرطوبة",
+    "wind": "الرياح",
+    "pressure": "الضغط",
+    "visibility": "الرؤية",
+    "uvIndex": "مؤشر الأشعة فوق البنفسجية",
+    "sunrise": "شروق الشمس",
+    "sunset": "غروب الشمس",
+    "updated": "تم التحديث"
+  },
+  "forecast": {
+    "title": "توقعات 10 أيام",
+    "hourly": "التوقعات بالساعة",
+    "today": "اليوم",
+    "tomorrow": "غداً",
+    "high": "الأعلى",
+    "low": "الأدنى",
+    "precip": "هطول الأمطار"
+  },
+  "lifestyle": {
+    "title": "توصيات نمط الحياة",
+    "subtitle": "اقتراحات مخصصة بناءً على الأحوال الجوية الحالية",
+    "activities": "الأنشطة الخارجية",
+    "clothing": "نصائح الملابس",
+    "food": "الغذاء والتغذية",
+    "exercise": "التمارين"
+  },
+  "health": {
+    "title": "رؤى صحية",
+    "subtitle": "الحالات الصحية والتوصيات بناءً على العوامل البيئية الحالية",
+    "airQuality": "جودة الهواء",
+    "uvIndex": "مؤشر الأشعة فوق البنفسجية",
+    "pollen": "حبوب اللقاح",
+    "malariaRisk": "خطر الملاريا",
+    "dengueRisk": "خطر حمى الضنك",
+    "meningitisRisk": "خطر التهاب السحايا",
+    "respiratoryRisk": "خطر تنفسي",
+    "heatStress": "الإجهاد الحراري",
+    "dehydration": "خطر الجفاف",
+    "migraine": "خطر الصداع النصفي",
+    "arthritis": "مؤشر التهاب المفاصل",
+    "asthma": "خطر الربو",
+    "cardiovascular": "الإجهاد القلبي الوعائي",
+    "sleepQuality": "جودة النوم",
+    "waterQuality": "خطر جودة المياه",
+    "risks": {
+      "low": "منخفض",
+      "moderate": "معتدل",
+      "high": "مرتفع",
+      "extreme": "شديد"
+    }
+  },
+  "farming": {
+    "title": "مستشار الزراعة",
+    "subtitle": "إرشادات زراعية لموقعك",
+    "planting": "نصيحة الزراعة",
+    "spraying": "نصيحة الرش",
+    "irrigation": "احتياج الري",
+    "frost": "تحذير الصقيع",
+    "harvest": "نافذة الحصاد",
+    "pest": "خطر الآفات",
+    "livestock": "نصيحة الثروة الحيوانية",
+    "waterHarvest": "تقدير حصاد المياه",
+    "crops": "المحاصيل"
+  },
+  "ai": {
+    "title": "مساعد الطقس بالذكاء الاصطناعي",
+    "placeholder": "اسألني أي شيء عن الطقس...",
+    "send": "إرسال",
+    "thinking": "جاري التفكير...",
+    "suggestions": {
+      "rain": "هل ستمطر اليوم؟",
+      "outfit": "ماذا أرتدي؟",
+      "activity": "أفضل وقت للأنشطة الخارجية؟",
+      "farming": "متى أزرع؟",
+      "travel": "أفضل يوم للسفر هذا الأسبوع؟"
+    }
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "theme": "المظهر",
+    "themeLight": "فاتح",
+    "themeDark": "داكن",
+    "themeAuto": "تلقائي",
+    "units": "الوحدات",
+    "unitsMetric": "متري (°C, km/h)",
+    "unitsImperial": "إمبراطوري (°F, mph)",
+    "apiKeys": "مفاتيح API",
+    "groqKey": "مفتاح Groq API (للذكاء الاصطناعي)",
+    "groqKeyHelp": "احصل على مفتاح مجاني على console.groq.com/keys",
+    "save": "حفظ",
+    "saved": "تم الحفظ!",
+    "clearData": "مسح جميع البيانات",
+    "exportData": "تصدير البيانات",
+    "importData": "استيراد البيانات"
+  },
+  "weather": {
+    "clear": "صافٍ",
+    "clouds": "غائم",
+    "rain": "مطر",
+    "drizzle": "رذاذ",
+    "thunderstorm": "عاصفة رعدية",
+    "snow": "ثلج",
+    "fog": "ضباب",
+    "mist": "شبورة",
+    "windy": "عاصف"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "كم/س",
+    "mph": "ميل/س",
+    "mm": "مم",
+    "in": "بوصة"
+  }
+}

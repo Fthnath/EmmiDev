@@ -1,0 +1,146 @@
+{
+  "app": {
+    "name": "EmmiDev Yamo",
+    "tagline": "Yamo mamegi, Piny mamegi",
+    "loading": "Tye kiketo...",
+    "error": "Tyen lok mo ogik",
+    "retry": "Tem dok"
+  },
+  "nav": {
+    "home": "Gang",
+    "forecast": "Kop me yamo",
+    "maps": "Maape",
+    "health": "Yotkom",
+    "farming": "Pur",
+    "ai": "Kony me AI",
+    "locations": "Kabedo",
+    "history": "Gin mukato",
+    "settings": "Kiyubu",
+    "about": "Kop inyimwa"
+  },
+  "search": {
+    "placeholder": "Coo nying taon mamegi",
+    "button": "Yeny",
+    "recent": "MAYENYO MA OKATO",
+    "noResults": "Pe tye taon mo ma ononge",
+    "detecting": "Tye kiyubu kabedo mamegi..."
+  },
+  "current": {
+    "title": "Yamo me Sani",
+    "feelsLike": "Winjo calo",
+    "humidity": "Yugi",
+    "wind": "Yamo",
+    "pressure": "Dino",
+    "visibility": "Neno",
+    "uvIndex": "Peo me UV",
+    "sunrise": "Cako me ceng",
+    "sunset": "Tum me ceng",
+    "updated": "Kiyubo"
+  },
+  "forecast": {
+    "title": "Kop me nino 10",
+    "hourly": "Kop me cawa",
+    "today": "Tin",
+    "tomorrow": "Kiny",
+    "high": "Malo",
+    "low": "Piny",
+    "precip": "Koth"
+  },
+  "lifestyle": {
+    "title": "Tam me Kwo",
+    "subtitle": "Tam ma opire kwo mamegi",
+    "activities": "Tic me woko",
+    "clothing": "Tam me boŋo",
+    "food": "Cam ki Megi",
+    "exercise": "Tic me kom"
+  },
+  "health": {
+    "title": "Ngec me Yotkom",
+    "subtitle": "Kit me yotkom ki tam",
+    "airQuality": "Ber me Yamo",
+    "uvIndex": "Peo me UV",
+    "pollen": "Peo me Polen",
+    "malariaRisk": "Bal me Malaria",
+    "dengueRisk": "Bal me Dengue",
+    "meningitisRisk": "Bal me Meningitis",
+    "respiratoryRisk": "Bal me Yweyo",
+    "heatStress": "Adwogi me Lyeŋ",
+    "dehydration": "Bal me Pii i Kom",
+    "migraine": "Bal me Wic",
+    "arthritis": "Bal me Chok",
+    "asthma": "Bal me Asthma",
+    "cardiovascular": "Bal me Cwiny",
+    "sleepQuality": "Ber me Nino",
+    "waterQuality": "Bal me Pii",
+    "risks": {
+      "low": "Piny",
+      "moderate": "I Kati",
+      "high": "Malo",
+      "extreme": "Mateek"
+    }
+  },
+  "farming": {
+    "title": "Kony me Pur",
+    "subtitle": "Tam me pur i kabedo mamegi",
+    "planting": "Tam me Coyo",
+    "spraying": "Tam me Biyo",
+    "irrigation": "Mit me Pii",
+    "frost": "Ruk me Yom",
+    "harvest": "Kare me Keyo",
+    "pest": "Bal me Kwon",
+    "livestock": "Tam me Jam",
+    "waterHarvest": "Kwano me Keyo Pii",
+    "crops": "Kodi"
+  },
+  "ai": {
+    "title": "Kony me AI me Yamo",
+    "placeholder": "Penya gin mo keken i kom yamo...",
+    "send": "Cwal",
+    "thinking": "Tye paro...",
+    "suggestions": {
+      "rain": "Koth biro cwer tin?",
+      "outfit": "An bino ruko ngo?",
+      "activity": "Cawa maber me tic woko?",
+      "farming": "An bicawo wang?",
+      "travel": "Nino maber me wot i caba? "
+    }
+  },
+  "settings": {
+    "title": "Kiyubu",
+    "language": "Leb",
+    "theme": "Kit me neno",
+    "themeLight": "Ler",
+    "themeDark": "Dundu",
+    "themeAuto": "Kigengo",
+    "units": "Peo",
+    "unitsMetric": "Metric (°C, km/h)",
+    "unitsImperial": "Imperial (°F, mph)",
+    "apiKeys": "Larwak me API",
+    "groqKey": "Larwak me Groq API (pi AI)",
+    "groqKeyHelp": "Nong larwak ma pe kiculu i console.groq.com/keys",
+    "save": "Gwoki",
+    "saved": "Kigwoko!",
+    "clearData": "Kwany Data Weng",
+    "exportData": "Kelo Data",
+    "importData": "Keto Data"
+  },
+  "weather": {
+    "clear": "Ler",
+    "clouds": "Boro",
+    "rain": "Koth",
+    "drizzle": "Koth matidi",
+    "thunderstorm": "Kugugu",
+    "snow": "Pe",
+    "fog": "Okungu",
+    "mist": "Okungu matidi",
+    "windy": "Yamo mateek"
+  },
+  "units": {
+    "celsius": "°C",
+    "fahrenheit": "°F",
+    "kmh": "km/h",
+    "mph": "mph",
+    "mm": "mm",
+    "in": "in"
+  }
+}
