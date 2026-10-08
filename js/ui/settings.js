@@ -79,22 +79,27 @@ export const Settings = {
         }
         
         // Groq key save
-        const groqSave = $('#groqKeySave');
-        if (groqSave) {
-            groqSave.addEventListener('click', () => {
+        const groqForm = $('#groqKeyForm');
+        if (groqForm) {
+            groqForm.addEventListener('submit', e => {
+                e.preventDefault();
                 const input = $('#groqKeyInput');
+                const saveButton = $('#groqKeySave');
                 const val = input.value.trim();
                 if (!val) return;
-                Storage.set(CONFIG.STORAGE_KEYS.GROQ_KEY, val);
+                if (!Storage.set(CONFIG.STORAGE_KEYS.GROQ_KEY, val)) return;
                 input.value = '••••••••' + val.slice(-4);
                 input.disabled = true;
-                groqSave.textContent = i18n.t('settings.saved');
+                saveButton.textContent = i18n.t('settings.saved');
                 setTimeout(() => {
                     input.disabled = false;
-                    groqSave.textContent = i18n.t('settings.save');
+                    saveButton.textContent = i18n.t('settings.save');
                 }, 1500);
             });
         }
+
+        const owmForm = $('#owmKeyForm');
+        owmForm?.addEventListener('submit', e => e.preventDefault());
         
         // Clear data
         const clearBtn = $('#clearDataBtn');

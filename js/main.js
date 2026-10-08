@@ -58,10 +58,15 @@ async function bootstrap() {
     wireThemeToggle();
 
     // ---- 7. Initialize weather scene (hero canvas) ----
-    initWeatherScene();
+    try {
+        initWeatherScene();
+    } catch (err) {
+        weatherScene = null;
+        console.error('[WeatherScene] Animation unavailable; continuing without it:', err);
+    }
 
     // ---- 8. Location manager ----
-    initLocationManager();
+    await initLocationManager();
 
     // ---- 9. Weather module ----
     Weather.init();
@@ -160,6 +165,10 @@ function updateThemeIcon(btn) {
 function initWeatherScene() {
     const canvas = document.getElementById('heroWeatherCanvas');
     if (!canvas) return;
+    if (typeof canvas.getContext !== 'function' || !canvas.getContext('2d')) {
+        console.error('[WeatherScene] 2D canvas is unavailable; skipping animation.');
+        return;
+    }
 
     weatherScene = new WeatherScene(canvas);
     weatherScene.setWeather({
@@ -357,7 +366,14 @@ function logBanner() {
 // ============================================
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bootstrap);
+    document.addEventListener('DOMContentLoaded', () => {
+        bootstrap().catch(handleBootstrapError);
+    });
 } else {
-    bootstrap();
+    bootstrap().catch(handleBootstrapError);
+}
+
+function handleBootstrapError(err) {
+    console.error('[App] Startup failed:', err);
+    Toast.error('The app could not start. Please refresh the page.');
 }

@@ -1,17 +1,22 @@
 class EventBus {
     constructor() { this.events = new Map(); }
     on(event, callback) {
+        if (typeof callback !== 'function') {
+            throw new TypeError('Event listener must be a function');
+        }
         if (!this.events.has(event)) this.events.set(event, new Set());
         this.events.get(event).add(callback);
         return () => this.off(event, callback);
     }
     off(event, callback) {
         const subs = this.events.get(event);
-        if (subs) subs.delete(callback);
+        if (!subs) return;
+        subs.delete(callback);
+        if (subs.size === 0) this.events.delete(event);
     }
     emit(event, data) {
         const subs = this.events.get(event);
-        if (subs) subs.forEach(cb => {
+        if (subs) [...subs].forEach(cb => {
             try { cb(data); }
             catch (err) { console.error(`[EventBus] ${event} error:`, err); }
         });

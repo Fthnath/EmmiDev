@@ -11,9 +11,6 @@
   "lang": "en",
   "categories": ["weather", "utilities", "productivity"],
   "icons": [
-    { "src": "favicon/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
-    { "src": "favicon/favicon-96x96.png", "sizes": "96x96", "type": "image/png" },
-    { "src": "favicon/android-icon-144x144.png", "sizes": "144x144", "type": "image/png" },
-    { "src": "favicon/android-icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" }
+    { "src": "weather-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
 }

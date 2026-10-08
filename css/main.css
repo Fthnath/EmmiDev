@@ -7,12 +7,3 @@
 @import url('layout.css');
 @import url('components.css');
 @import url('animations.css');
-
-/* Additional module styles loaded later:
-   - css/weather.css
-   - css/health.css
-   - css/farming.css
-   - css/ai.css
-   - css/charts.css
-   - css/radar.css
-*/

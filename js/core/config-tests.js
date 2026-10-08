@@ -12,6 +12,7 @@ import { Toast } from '../ui/toast.js';
 import { Modal } from '../ui/modals.js';
 import { router } from './router.js';
 import { i18n, t } from '../ui/i18n.js';
+import { weatherCodeToCondition } from './api.js';
 
 export async function runSelfTests() {
     const results = [];
@@ -36,6 +37,26 @@ export async function runSelfTests() {
         AppState.set('__test__', 42);
         return AppState.get('__test__') === 42;
     });
+    check('State listeners are isolated', () => {
+        let received = false;
+        let errorLogged = false;
+        const originalError = console.error;
+        console.error = () => { errorLogged = true; };
+        const offThrowing = AppState.on('__test_listener__', () => {
+            throw new Error('Expected test listener failure');
+        });
+        const offWorking = AppState.on('__test_listener__', value => {
+            received = value === 1;
+        });
+        try {
+            AppState.set('__test_listener__', 1);
+        } finally {
+            console.error = originalError;
+            offThrowing();
+            offWorking();
+        }
+        return received && errorLogged;
+    });
     check('EventBus works', () => {
         let got = null;
         const off = Bus.on('__test__', (v) => { got = v; });
@@ -43,6 +64,19 @@ export async function runSelfTests() {
         off();
         return got === 'ok';
     });
+    check('EventBus once listener runs once', () => {
+        let calls = 0;
+        Bus.once('__test_once__', () => { calls++; });
+        Bus.emit('__test_once__');
+        Bus.emit('__test_once__');
+        return calls === 1;
+    });
+    check('Weather codes reject invalid ranges', () =>
+        weatherCodeToCondition(-1) === 'unknown' &&
+        weatherCodeToCondition(4) === 'unknown' &&
+        weatherCodeToCondition(100) === 'unknown' &&
+        weatherCodeToCondition(95) === 'thunderstorm'
+    );
     check('Theme loaded', () => !!Theme.current());
     check('Toast loaded', () => typeof Toast.show === 'function');
     check('Modal loaded', () => typeof Modal.open === 'function');

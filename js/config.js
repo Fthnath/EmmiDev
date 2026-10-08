@@ -3,6 +3,8 @@
  * Public config only. NO SECRETS HERE.
  * API keys are stored in localStorage via the Settings UI.
  */
+import { Storage } from './core/storage.js';
+
 export const CONFIG = {
     APP_NAME: 'EmmiDev Weather',
     APP_VERSION: '2.0.0',
@@ -48,9 +50,9 @@ export const CONFIG = {
 };
 export function getApiKey(service) {
     const key = CONFIG.STORAGE_KEYS[service + '_KEY'];
-    return key ? localStorage.getItem(key) : null;
+    return key ? Storage.get(key) : null;
 }
 export function setApiKey(service, value) {
     const key = CONFIG.STORAGE_KEYS[service + '_KEY'];
-    if (key) localStorage.setItem(key, value);
+    return key ? Storage.set(key, value) : false;
 }

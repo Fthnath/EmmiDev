@@ -3,19 +3,17 @@
  * Offline-first caching for the app shell.
  */
 
-const CACHE_VERSION = 'emmidev-v2.0.0';
+const CACHE_VERSION = 'emmidev-v2.0.1';
 const APP_SHELL = [
     './',
     './index.html',
     './manifest.json',
+    './weather-icon.svg',
     './css/main.css',
     './css/themes.css',
     './css/layout.css',
     './css/components.css',
     './css/animations.css',
-    './css/hero.css',
-    './css/weather.css',
-    './css/pwa.css',
     './js/main.js',
     './js/config.js',
     './js/core/api.js',
@@ -64,7 +62,7 @@ self.addEventListener('fetch', (e) => {
     if (req.method !== 'GET') return;
     const url = new URL(req.url);
 
-    // Skip caching for API calls (always network)
+    // Skip caching for API calls (always network, but handle offline failures cleanly)
     if (url.hostname.includes('open-meteo') ||
         url.hostname.includes('openweathermap') ||
         url.hostname.includes('nominatim') ||
@@ -72,6 +70,8 @@ self.addEventListener('fetch', (e) => {
         url.hostname.includes('rainviewer')) {
         e.respondWith(
             fetch(req).catch(() => new Response(JSON.stringify({ error: 'offline' }), {
+                status: 503,
+                statusText: 'Offline',
                 headers: { 'Content-Type': 'application/json' }
             }))
         );

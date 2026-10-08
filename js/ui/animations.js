@@ -47,7 +47,7 @@ export class WeatherScene {
         this.lightning = { active: false, flash: 0, next: 0 };
         
         this._boundAnimate = this._animate.bind(this);
-        this._boundResize = this._resize.bind(this);
+        this._boundResize = this.resize.bind(this);
         
         this.resize();
         window.addEventListener('resize', this._boundResize);

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="description" content="EmmiDev Weather — Africa-first weather intelligence with health, farming, and AI guidance. Free forever.">
     <meta name="theme-color" content="#1a73e8">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="EmmiDev">
@@ -22,15 +23,9 @@
 
     <!-- Our Modular CSS -->
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/weather.css">
-    <link rel="stylesheet" href="css/hero.css">
-    <link rel="stylesheet" href="css/pwa.css">
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96x96.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="favicon/android-icon-144x144.png">
+    <link rel="icon" type="image/svg+xml" href="weather-icon.svg">
     <link rel="manifest" href="manifest.json">
 </head>
 <body>
@@ -328,11 +323,11 @@
 
                     <!-- Groq API Key -->
                     <div class="settings-row settings-row-column">
-                        <label class="settings-label" data-i18n="settings.groqKey">Groq API Key (for AI)</label>
-                        <div class="settings-key-row">
+                        <label class="settings-label" for="groqKeyInput" data-i18n="settings.groqKey">Groq API Key (for AI)</label>
+                        <form class="settings-key-row" id="groqKeyForm">
                             <input type="password" id="groqKeyInput" class="input" placeholder="gsk_..." autocomplete="off">
-                            <button id="groqKeySave" class="btn btn-primary" data-i18n="settings.save">Save</button>
-                        </div>
+                            <button id="groqKeySave" class="btn btn-primary" type="submit" data-i18n="settings.save">Save</button>
+                        </form>
                         <small class="settings-help" data-i18n="settings.groqKeyHelp">
                             Get a free key at console.groq.com/keys
                         </small>
@@ -340,11 +335,11 @@
 
                     <!-- OpenWeatherMap API Key -->
                     <div class="settings-row settings-row-column">
-                        <label class="settings-label">OpenWeatherMap API Key (optional fallback)</label>
-                        <div class="settings-key-row">
+                        <label class="settings-label" for="owmKeyInput">OpenWeatherMap API Key (optional fallback)</label>
+                        <form class="settings-key-row" id="owmKeyForm">
                             <input type="password" id="owmKeyInput" class="input" placeholder="Leave blank to use Open-Meteo only" autocomplete="off">
-                            <button id="owmKeySave" class="btn btn-primary" data-i18n="settings.save">Save</button>
-                        </div>
+                            <button id="owmKeySave" class="btn btn-primary" type="submit" data-i18n="settings.save">Save</button>
+                        </form>
                         <small class="settings-help">
                             Optional. Get a free key at home.openweathermap.org/api_keys
                         </small>
