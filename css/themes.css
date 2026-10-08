@@ -64,7 +64,7 @@
     --space-2xl: 5rem;
     
     /* Typography */
-    --font-sans: 'Poppins', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
     --font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
     
     /* Transitions */

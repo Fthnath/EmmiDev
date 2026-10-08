@@ -3,7 +3,7 @@
  * Offline-first caching for the app shell.
  */
 
-const CACHE_VERSION = 'emmidev-v2.0.5';
+const CACHE_VERSION = 'emmidev-v2.0.6';
 const APP_SHELL = [
     './',
     './index.html',
@@ -24,6 +24,23 @@ const APP_SHELL = [
     './css/hero.css',
     './css/weather.css',
     './css/pwa.css',
+    './vendor/fontawesome/css/all.min.css',
+    './vendor/fontawesome/webfonts/fa-brands-400.woff2',
+    './vendor/fontawesome/webfonts/fa-brands-400.ttf',
+    './vendor/fontawesome/webfonts/fa-regular-400.woff2',
+    './vendor/fontawesome/webfonts/fa-regular-400.ttf',
+    './vendor/fontawesome/webfonts/fa-solid-900.woff2',
+    './vendor/fontawesome/webfonts/fa-solid-900.ttf',
+    './vendor/fontawesome/webfonts/fa-v4compatibility.woff2',
+    './vendor/fontawesome/webfonts/fa-v4compatibility.ttf',
+    './vendor/leaflet/leaflet.css',
+    './vendor/leaflet/leaflet.js',
+    './vendor/leaflet/images/layers.png',
+    './vendor/leaflet/images/layers-2x.png',
+    './vendor/leaflet/images/marker-icon.png',
+    './vendor/leaflet/images/marker-icon-2x.png',
+    './vendor/leaflet/images/marker-shadow.png',
+    './vendor/chartjs/chart.umd.min.js',
     './js/main.js',
     './js/config.js',
     './js/core/api.js',
