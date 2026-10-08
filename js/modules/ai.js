@@ -100,9 +100,13 @@ class AIModule {
     }
 
     async query(userText) {
-        const apiKey = Storage.get(CONFIG.STORAGE_KEYS.GROQ_KEY);
+        const storedKey = Storage.get(CONFIG.STORAGE_KEYS.GROQ_KEY);
+        const apiKey = typeof storedKey === 'string' ? storedKey.trim() : '';
         if (!apiKey) {
             throw new Error('No Groq API key. Add one in Settings → Groq API Key.');
+        }
+        if (!/^[\x20-\x7E]+$/.test(apiKey)) {
+            throw new Error('The saved Groq API key contains invalid characters (possibly a masked key). Open Settings, paste the original key, and save it again.');
         }
 
         const context = this.buildContext();

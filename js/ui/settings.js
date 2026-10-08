@@ -8,6 +8,7 @@ import { Storage } from '../core/storage.js';
 import { Bus, Events } from '../core/events.js';
 import { i18n } from './i18n.js';
 import { $, create } from '../utils/dom.js';
+import { Toast } from './toast.js';
 
 export const Settings = {
     init() {
@@ -43,7 +44,10 @@ export const Settings = {
         const groqInput = $('#groqKeyInput');
         if (groqInput) {
             const key = Storage.get(CONFIG.STORAGE_KEYS.GROQ_KEY);
-            if (key) groqInput.value = '••••••••' + key.slice(-4);
+            groqInput.value = '';
+            groqInput.placeholder = key
+                ? `Saved key ending in ${String(key).slice(-4)} — enter a new key to replace`
+                : 'Paste your Groq API key';
         }
     },
     
@@ -87,14 +91,15 @@ export const Settings = {
                 const saveButton = $('#groqKeySave');
                 const val = input.value.trim();
                 if (!val) return;
+                if (!/^[\x20-\x7E]+$/.test(val)) {
+                    Toast.error('API keys must contain only standard ASCII characters. Paste the original key, not its masked display.');
+                    return;
+                }
                 if (!Storage.set(CONFIG.STORAGE_KEYS.GROQ_KEY, val)) return;
-                input.value = '••••••••' + val.slice(-4);
-                input.disabled = true;
+                input.value = '';
+                input.placeholder = `Saved key ending in ${val.slice(-4)} — enter a new key to replace`;
                 saveButton.textContent = i18n.t('settings.saved');
-                setTimeout(() => {
-                    input.disabled = false;
-                    saveButton.textContent = i18n.t('settings.save');
-                }, 1500);
+                setTimeout(() => { saveButton.textContent = i18n.t('settings.save'); }, 1500);
             });
         }
 
