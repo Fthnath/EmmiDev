@@ -1,0 +1,25 @@
+# EmmiDev Weather — Git Ignore
+.env
+.env.local
+.env.*.local
+config.local.js
+js/config.local.js
+secrets.json
+*.key
+*.pem
+.DS_Store
+._*
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*~
+node_modules/
+npm-debug.log*
+dist/
+build/
+*.log
+*.backup.*
+index.backup.html
+style.backup.css
+script.backup.js
