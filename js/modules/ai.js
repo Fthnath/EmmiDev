@@ -138,7 +138,10 @@ Reply concisely (2-4 sentences) and be practical. If asked about farming, give s
 
         if (!res.ok) {
             const errText = await res.text();
-            throw new Error(`Groq API ${res.status}: ${errText.substring(0, 120)}`);
+            if (res.status === 404) {
+                throw new Error(`Groq could not access model "${CONFIG.GROQ_MODEL}". Check that your Groq account/key has access to this model, then try again. Details: ${errText.substring(0, 200)}`);
+            }
+            throw new Error(`Groq API ${res.status}: ${errText.substring(0, 200)}`);
         }
 
         const data = await res.json();

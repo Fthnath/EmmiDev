@@ -16,7 +16,7 @@ export const CONFIG = {
     OWM_BASE: 'https://api.openweathermap.org/data/2.5',
     OWM_GEO: 'https://api.openweathermap.org/geo/1.0',
     GROQ_BASE: 'https://api.groq.com/openai/v1',
-    GROQ_MODEL: 'llama-3.3-70b-versatile',
+    GROQ_MODEL: 'openai/gpt-oss-20b',
     STORAGE_KEYS: {
         LOCATIONS: 'emmidev_locations',
         ACTIVE_LOCATION: 'emmidev_active_location',
