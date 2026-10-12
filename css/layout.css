@@ -229,34 +229,73 @@ body {
 
 @media (max-width: 768px) {
     :root {
-        --nav-height: 56px;
+        --nav-height: 64px;
     }
-    
+
+    body {
+        padding-bottom: 90px;
+    }
+
     .container {
         padding: 0 var(--space);
     }
-    
+
+    .nav {
+        flex-wrap: wrap;
+        min-height: var(--nav-height);
+        height: auto;
+        padding: 8px 0;
+        gap: 8px;
+    }
+
     .nav-logo span {
         display: none;
     }
-    
+
+    .nav-links {
+        order: 3;
+        width: 100%;
+        justify-content: space-between;
+        gap: 4px;
+        padding-bottom: 2px;
+    }
+
     .nav-link {
         padding: var(--space-xs) var(--space-sm);
-        font-size: 0.85rem;
+        font-size: 0.82rem;
     }
-    
+
     .section {
         padding: var(--space-xl) 0;
     }
 }
 
 @media (max-width: 480px) {
+    body {
+        padding-bottom: 100px;
+    }
+
+    .nav {
+        gap: 6px;
+    }
+
     .nav-links {
         gap: 2px;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
     }
-    
+
     .nav-link {
-        padding: 6px 10px;
-        font-size: 0.8rem;
+        padding: 6px 8px;
+        font-size: 0.76rem;
+    }
+
+    .container {
+        padding: 0 12px;
+    }
+
+    .section {
+        padding: var(--space-lg) 0;
     }
 }

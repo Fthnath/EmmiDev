@@ -904,16 +904,25 @@
    ============================================ */
 
 .ai-chat-wrap {
-    max-width: 800px;
-    margin: 0 auto;
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    width: min(420px, calc(100vw - 24px));
+    max-width: calc(100vw - 24px);
+    height: min(72vh, 620px);
+    margin: 0;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: 640px;
-    box-shadow: var(--shadow);
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.18);
+    z-index: 120;
+}
+
+.view[data-view="ai"] {
+    padding-bottom: 120px;
 }
 
 .ai-messages {
@@ -1035,6 +1044,49 @@
     padding: var(--space);
     background: var(--surface);
     border-top: 1px solid var(--border);
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .ai-chat-wrap {
+        right: 12px;
+        bottom: 12px;
+        width: calc(100vw - 24px);
+        height: min(68vh, 560px);
+    }
+
+    .ai-msg {
+        max-width: 90%;
+    }
+
+    .ai-bubble {
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .ai-chat-wrap {
+        right: 10px;
+        left: 10px;
+        width: auto;
+        height: 62vh;
+        bottom: 10px;
+    }
+
+    .ai-suggestions {
+        padding: var(--space-sm) var(--space);
+    }
+
+    .ai-input-row {
+        gap: 8px;
+        padding: 10px;
+    }
+
+    .ai-send-btn,
+    .ai-voice-btn {
+        width: 40px;
+        height: 40px;
+    }
 }
 
 .ai-input {
