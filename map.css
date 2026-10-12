@@ -137,6 +137,12 @@
     color: #555;
     margin-bottom: 6px;
 }
+.map-legend-range {
+    margin-top: 6px;
+    color: var(--text-muted, #666);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
 .map-legend-bar {
     display: flex;
     height: 8px;

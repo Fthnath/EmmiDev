@@ -284,7 +284,7 @@ export class WeatherScene {
         if (!this.isDay) this._drawStars();
         
         // 3. Sun or Moon
-        if (this.isDay && !['rain', 'thunderstorm'].includes(this.condition)) {
+        if (this.isDay && !['rain', 'drizzle', 'thunderstorm'].includes(this.condition)) {
             this._drawSun();
         } else if (!this.isDay) {
             this._drawMoon();

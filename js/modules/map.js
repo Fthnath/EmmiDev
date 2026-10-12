@@ -1,4 +1,4 @@
-import { CONFIG, getApiKey } from '../config.js';
+import { CONFIG } from '../config.js';
 import { formatLocationLabel } from './locations.js';
 
 class WeatherMapModule {
@@ -16,6 +16,8 @@ class WeatherMapModule {
         this.isPlaying = false;
         this.activeLayer = null;
         this.layerLayers = {};
+        this.weatherOverlayRequestId = 0;
+        this.weatherOverlayRefreshTimer = null;
         this.location = null;
         this.initialized = false;
         this.pendingClickHandler = null;
@@ -81,6 +83,7 @@ class WeatherMapModule {
         this.bindTimelineControls();
         this.bindRecenterButton();
         this.bindMapClickInspect();
+        this.map.on('moveend zoomend', () => this.scheduleWeatherOverlayRefresh());
 
         this.initialized = true;
 
@@ -159,6 +162,7 @@ class WeatherMapModule {
 
     toggleLayer(layerType, button) {
         if (!this.map) return;
+        this.weatherOverlayRequestId++;
 
         const wasActive = button.classList.contains('active');
 
@@ -177,11 +181,12 @@ class WeatherMapModule {
         }
 
         if (this.isPlaying) this.pausePlayback();
+        this.hideTimeline();
+        this.hideLegend();
+        this.hideStatus();
 
         if (wasActive) {
             this.activeLayer = null;
-            this.hideTimeline();
-            this.hideLegend();
             return;
         }
 
@@ -270,33 +275,113 @@ class WeatherMapModule {
     }
 
     /* ============================================================
-       TEMP / WIND / CLOUD LAYERS (OpenWeatherMap free tier)
+       TEMPERATURE / WIND / CLOUD OVERLAYS (Open-Meteo, no key)
        ============================================================ */
-    activateWeatherLayer(type, button) {
-        const key = getApiKey('OWM');
-        if (typeof key !== 'string' || !key.trim()) {
-            this.showStatus(`${type} overlay needs an OpenWeatherMap key. Rain radar and map inspection still work.`);
-            button.classList.remove('active');
-            this.activeLayer = null;
-            return;
+    async activateWeatherLayer(type, button) {
+        const requestId = ++this.weatherOverlayRequestId;
+        const labels = { temp: 'temperature', wind: 'wind', clouds: 'cloud' };
+        const variable = labels[type];
+        if (!variable) return;
+
+        const previous = this.layerLayers[type];
+        if (previous && this.map.hasLayer(previous)) this.map.removeLayer(previous);
+        button.classList.add('loading');
+        this.showStatus(`Loading ${variable} overlay…`);
+
+        try {
+            const size = this.map.getSize();
+            if (!size.x || !size.y) throw new Error('Map is not visible yet');
+
+            const columns = 8;
+            const rows = 8;
+            const points = [];
+            for (let row = 0; row < rows; row++) {
+                for (let column = 0; column < columns; column++) {
+                    const x = (column + 0.5) * size.x / columns;
+                    const y = (row + 0.5) * size.y / rows;
+                    points.push(this.map.containerPointToLatLng([x, y]));
+                }
+            }
+
+            const params = new URLSearchParams({
+                latitude: points.map(point => point.lat.toFixed(4)).join(','),
+                longitude: points.map(point => point.lng.toFixed(4)).join(','),
+                current: 'temperature_2m,wind_speed_10m,cloud_cover',
+                timezone: 'auto'
+            });
+            const response = await fetch(`${CONFIG.OPEN_METEO_BASE}/forecast?${params}`);
+            if (!response.ok) throw new Error(`Weather service returned HTTP ${response.status}`);
+            const result = await response.json();
+            const locations = Array.isArray(result) ? result : [result];
+            if (locations.length !== points.length) throw new Error('Weather service returned incomplete map data');
+
+            if (requestId !== this.weatherOverlayRequestId || this.activeLayer !== type) return;
+
+            const valueKeys = {
+                temp: 'temperature_2m',
+                wind: 'wind_speed_10m',
+                clouds: 'cloud_cover'
+            };
+            const values = locations.map(location => location?.current?.[valueKeys[type]]);
+            if (!values.some(Number.isFinite)) throw new Error('Weather data is unavailable for this area');
+
+            const spacing = Math.min(size.x / columns, size.y / rows);
+            const layer = window.L.layerGroup();
+            points.forEach((point, index) => {
+                const value = values[index];
+                if (!Number.isFinite(value)) return;
+                window.L.circleMarker([point.lat, point.lng], {
+                    radius: Math.max(12, Math.min(34, spacing * 0.78)),
+                    stroke: false,
+                    fillColor: this.weatherValueColor(type, value),
+                    fillOpacity: 0.58,
+                    interactive: false
+                }).addTo(layer);
+            });
+
+            layer.addTo(this.map);
+            this.layerLayers[type] = layer;
+            this.hideStatus();
+            this.showLegend(type, values.filter(Number.isFinite));
+        } catch (err) {
+            if (requestId === this.weatherOverlayRequestId && this.activeLayer === type) {
+                console.error(`[WeatherMap] ${variable} overlay failed:`, err);
+                button.classList.remove('active');
+                this.activeLayer = null;
+                this.hideLegend();
+                this.showStatus(`${variable[0].toUpperCase()}${variable.slice(1)} overlay unavailable. Check your connection and try again.`);
+            }
+        } finally {
+            button.classList.remove('loading');
         }
+    }
 
-        const leaflet = window.L;
-        const urls = {
-            temp:   `https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=${key}`,
-            wind:   `https://tile.openweathermap.org/map/wind_new/{z}/{x}/{y}.png?appid=${key}`,
-            clouds: `https://tile.openweathermap.org/map/clouds_new/{z}/{x}/{y}.png?appid=${key}`
+    weatherValueColor(type, value) {
+        const scales = {
+            temp: { min: -5, max: 40, colors: ['#2563eb', '#22d3ee', '#22c55e', '#facc15', '#f97316', '#dc2626'] },
+            wind: { min: 0, max: 80, colors: ['#e0f2fe', '#38bdf8', '#0ea5e9', '#7c3aed', '#4c1d95'] },
+            clouds: { min: 0, max: 100, colors: ['#f8fafc', '#cbd5e1', '#64748b', '#1e293b'] }
         };
-
-        const layer = leaflet.tileLayer(urls[type], {
-            opacity: 0.7,
-            maxZoom: 19,
-            attribution: '&copy; OpenWeatherMap'
+        const scale = scales[type];
+        const position = Math.max(0, Math.min(1, (value - scale.min) / (scale.max - scale.min))) * (scale.colors.length - 1);
+        const lower = Math.floor(position);
+        const upper = Math.min(scale.colors.length - 1, lower + 1);
+        const amount = position - lower;
+        const channels = [1, 3, 5].map(index => {
+            const start = parseInt(scale.colors[lower].slice(index, index + 2), 16);
+            const end = parseInt(scale.colors[upper].slice(index, index + 2), 16);
+            return Math.round(start + (end - start) * amount).toString(16).padStart(2, '0');
         });
+        return `#${channels.join('')}`;
+    }
 
-        this.layerLayers[type] = layer;
-        layer.addTo(this.map);
-        this.showLegend(type);
+    scheduleWeatherOverlayRefresh() {
+        if (!['temp', 'wind', 'clouds'].includes(this.activeLayer)) return;
+        clearTimeout(this.weatherOverlayRefreshTimer);
+        this.weatherOverlayRefreshTimer = setTimeout(() => {
+            const button = document.querySelector(`.map-layer-btn[data-layer="${this.activeLayer}"]`);
+            if (button) this.activateWeatherLayer(this.activeLayer, button);
+        }, 400);
     }
 
     /* ============================================================
@@ -485,7 +570,7 @@ class WeatherMapModule {
     /* ============================================================
        LEGEND
        ============================================================ */
-    showLegend(type) {
+    showLegend(type, values = []) {
         const el = document.getElementById('mapLegend');
         if (!el) return;
         const legends = {
@@ -496,11 +581,15 @@ class WeatherMapModule {
         };
         const cfg = legends[type];
         if (!cfg) return;
+        const limits = values.length ? `
+            <div class="map-legend-range">${Math.min(...values).toFixed(1)} – ${Math.max(...values).toFixed(1)}${type === 'temp' ? ' °C' : type === 'wind' ? ' km/h' : '%'}</div>
+        ` : '';
         el.innerHTML = `
             <div class="map-legend-title">${cfg.title}</div>
             <div class="map-legend-bar">
                 ${cfg.stops.map(c => `<span style="background:${c}"></span>`).join('')}
             </div>
+            ${limits}
         `;
         el.classList.add('visible');
     }
@@ -536,6 +625,7 @@ class WeatherMapModule {
             if (!this.map) return;
         }
         setTimeout(() => this.map.invalidateSize(), 150);
+        this.scheduleWeatherOverlayRefresh();
     }
 
     /* ============================================================
