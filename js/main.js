@@ -256,15 +256,7 @@ async function initLocationManager() {
 // ============================================
 
 async function loadInitialWeather() {
-    // Preserve an explicitly searched place; refresh GPS-based and legacy locations.
-    const saved = Storage.get(CONFIG.STORAGE_KEYS.ACTIVE_LOCATION, null);
-    if (saved?.source === 'search') {
-        currentLocation = saved;
-        Weather.loadFor(saved);
-        return;
-    }
-
-    // Try geolocation
+    // Prefer a fresh device location; use the saved place only if detection fails.
     if ('geolocation' in navigator) {
         try {
             Toast.info('Detecting your location...', 2000);
@@ -279,8 +271,15 @@ async function loadInitialWeather() {
             return;
         } catch (err) {
             console.warn('[Geo] Denied or failed:', err.message);
-            Toast.warning('Could not detect your location. Showing your saved place instead.', 3000);
+            const reason = err.code === 1
+                ? 'Allow location access for this site in your browser settings.'
+                : err.code === 3
+                    ? 'Location detection timed out. Check that location services are enabled.'
+                    : 'Your device could not provide a location.';
+            Toast.warning(`${reason} Showing your saved place instead.`, 5000);
         }
+    } else {
+        Toast.warning('This browser does not support location detection. Showing your saved place instead.', 5000);
     }
 
     // Use a previously saved location if GPS was unavailable, then the default.
@@ -304,7 +303,7 @@ function getPosition(options = {}) {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
             timeout: options.timeout || 15000,
-            maximumAge: 60 * 1000
+            maximumAge: 0
         });
     });
 }

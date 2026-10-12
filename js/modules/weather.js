@@ -149,7 +149,7 @@ class WeatherModule {
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
                     timeout: 15000,
-                    maximumAge: 60 * 1000
+                    maximumAge: 0
                 })
             );
             const loc = await LocationManager.addFromCoords(
@@ -159,7 +159,12 @@ class WeatherModule {
             );
             Toast.success(`Location: ${formatLocationLabel(loc)}`);
         } catch (err) {
-            Toast.error('Could not get your location');
+            const message = err.code === 1
+                ? 'Allow location access for this site in your browser settings.'
+                : err.code === 3
+                    ? 'Location detection timed out. Check that location services are enabled.'
+                    : 'Could not get your location. Check your browser permission and device location settings.';
+            Toast.error(message);
         }
     }
 

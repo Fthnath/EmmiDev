@@ -3,7 +3,7 @@
  * Offline-first caching for the app shell.
  */
 
-const CACHE_VERSION = 'emmidev-v2.0.9';
+const CACHE_VERSION = 'emmidev-v2.0.10';
 const APP_SHELL = [
     './',
     './index.html',
