@@ -230,12 +230,9 @@ async function initLocationManager() {
 // ============================================
 
 async function loadInitialWeather() {
-    // Priority: saved active location > geolocation > default
+    // Preserve an explicitly searched place; refresh GPS-based and legacy locations.
     const saved = Storage.get(CONFIG.STORAGE_KEYS.ACTIVE_LOCATION, null);
-    const isDefaultLocation = saved &&
-        Math.abs(Number(saved.lat) - CONFIG.DEFAULT_LOCATION.lat) < 0.001 &&
-        Math.abs(Number(saved.lon) - CONFIG.DEFAULT_LOCATION.lon) < 0.001;
-    if (saved && !isDefaultLocation) {
+    if (saved?.source === 'search') {
         currentLocation = saved;
         Weather.loadFor(saved);
         return;
@@ -245,17 +242,18 @@ async function loadInitialWeather() {
     if ('geolocation' in navigator) {
         try {
             Toast.info('Detecting your location...', 2000);
-            const pos = await getPosition({ timeout: 8000 });
+            const pos = await getPosition({ timeout: 15000 });
             const loc = await LocationManager.addFromCoords(
                 pos.coords.latitude,
-                pos.coords.longitude
+                pos.coords.longitude,
+                { accuracy: pos.coords.accuracy }
             );
             currentLocation = loc;
             Weather.loadFor(loc);
             return;
         } catch (err) {
             console.warn('[Geo] Denied or failed:', err.message);
-            Toast.warning('Location denied — showing Kampala', 3000);
+            Toast.warning('Could not detect your location. Showing your saved place instead.', 3000);
         }
     }
 
@@ -279,8 +277,8 @@ function getPosition(options = {}) {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
             enableHighAccuracy: true,
-            timeout: options.timeout || 10000,
-            maximumAge: 5 * 60 * 1000
+            timeout: options.timeout || 15000,
+            maximumAge: 60 * 1000
         });
     });
 }

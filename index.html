@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="css/main.css">
     <link rel="stylesheet" href="css/hero.css">
     <link rel="stylesheet" href="css/weather.css">
+    <link rel="stylesheet" href="map.css">
     <link rel="stylesheet" href="css/pwa.css">
 
     <!-- Favicon -->
@@ -186,18 +187,60 @@
         </section>
 
         <!-- ============ MAPS VIEW ============ -->
+
+        <!-- ============ MAPS VIEW ============ -->
         <section class="view" data-view="maps">
             <div class="container section">
-                <h2 class="section-title" data-i18n="nav.maps">Weather Maps</h2>
-                <div class="map-toolbar">
-                    <button class="map-layer-btn active" data-layer="precip" type="button">Rain radar</button>
-                    <button class="map-layer-btn" type="button" disabled title="Temperature map tiles are not available yet">Temperature</button>
-                    <button class="map-layer-btn" type="button" disabled title="Wind map tiles are not available yet">Wind</button>
-                    <button class="map-layer-btn" type="button" disabled title="Cloud map tiles are not available yet">Clouds</button>
+                <div class="maps-header">
+                    <h2 class="section-title" data-i18n="nav.maps">Weather Maps</h2>
+                    <p class="maps-subtitle">Live radar, temperature, wind and cloud layers</p>
                 </div>
-                <div class="weather-map-shell">
-                    <div id="weather-radar-map" class="weather-map" aria-label="Interactive weather map"></div>
-                    <p id="weatherMapStatus" class="weather-map-status" role="status" hidden></p>
+
+                <div class="map-app">
+                    <!-- Layer toolbar -->
+                    <div class="map-toolbar-pro">
+                        <button class="map-layer-btn active" data-layer="precip" type="button">
+                            <i class="fas fa-cloud-rain"></i><span>Rain</span>
+                        </button>
+                        <button class="map-layer-btn" data-layer="temp" type="button">
+                            <i class="fas fa-temperature-half"></i><span>Temp</span>
+                        </button>
+                        <button class="map-layer-btn" data-layer="wind" type="button">
+                            <i class="fas fa-wind"></i><span>Wind</span>
+                        </button>
+                        <button class="map-layer-btn" data-layer="clouds" type="button">
+                            <i class="fas fa-cloud"></i><span>Clouds</span>
+                        </button>
+
+                        <div class="map-toolbar-spacer"></div>
+
+                        <button class="map-util-btn" id="mapBasemapToggle" data-mode="street" type="button" title="Switch basemap">
+                            <i class="fas fa-layer-group"></i><span>Street</span>
+                        </button>
+                        <button class="map-util-btn" id="mapRecenterBtn" type="button" title="Recenter">
+                            <i class="fas fa-crosshairs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Map shell -->
+                    <div class="weather-map-shell">
+                        <div id="weather-radar-map" class="weather-map" aria-label="Interactive weather map"></div>
+
+                        <!-- Legend -->
+                        <div id="mapLegend" class="map-legend" aria-hidden="true"></div>
+
+                        <!-- Status -->
+                        <p id="weatherMapStatus" class="weather-map-status" role="status" hidden></p>
+                    </div>
+
+                    <!-- Radar timeline -->
+                    <div id="radarTimeline" class="radar-timeline">
+                        <button id="radarPlayPause" class="radar-play-btn" aria-label="Play radar animation">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <input id="radarSlider" type="range" min="0" max="0" value="0" class="radar-slider" aria-label="Radar frame">
+                        <span id="radarTimestamp" class="radar-timestamp">—</span>
+                    </div>
                 </div>
             </div>
         </section>

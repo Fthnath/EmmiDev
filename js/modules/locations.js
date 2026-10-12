@@ -86,6 +86,12 @@ class LocationManagerClass {
 
         if (this.has(loc.lat, loc.lon)) {
             const existing = this._list.find(l => this._sameCoord(l, loc));
+            for (const key of ['name', 'country', 'countryName', 'neighbourhood', 'division', 'district', 'state', 'source', 'precise', 'accuracy']) {
+                if (loc[key] != null && loc[key] !== '') existing[key] = loc[key];
+            }
+            existing.lat = loc.lat;
+            existing.lon = loc.lon;
+            Storage.set(CONFIG.STORAGE_KEYS.LOCATIONS, this._list);
             if (!silent) Toast.info(`${existing.name} is already saved`);
             return existing;
         }
@@ -99,6 +105,9 @@ class LocationManagerClass {
             division: loc.division || '',
             district: loc.district || '',
             state: loc.state || '',
+            source: loc.source || '',
+            precise: Boolean(loc.precise),
+            accuracy: Number.isFinite(loc.accuracy) ? loc.accuracy : null,
             lat: loc.lat,
             lon: loc.lon,
             addedAt: Date.now(),
@@ -115,8 +124,13 @@ class LocationManagerClass {
         return item;
     }
 
-    async addFromCoords(lat, lon) {
-        const resolved = await reverseGeocode(lat, lon);
+    async addFromCoords(lat, lon, metadata = {}) {
+        let resolved = {};
+        try {
+            resolved = await reverseGeocode(lat, lon);
+        } catch (err) {
+            console.warn('[LocationManager] Reverse geocoding unavailable:', err.message);
+        }
         const loc = {
             name: resolved.name || 'My Location',
             country: resolved.country || '',
@@ -125,6 +139,9 @@ class LocationManagerClass {
             division: resolved.division || '',
             district: resolved.district || '',
             state: resolved.state || '',
+            source: 'gps',
+            precise: true,
+            accuracy: Number.isFinite(metadata.accuracy) ? metadata.accuracy : null,
             lat, lon
         };
         this.add(loc, true);
@@ -292,6 +309,7 @@ class LocationManagerClass {
                     name: item.dataset.name,
                     country: item.dataset.country,
                     state: item.dataset.state || '',
+                    source: 'search',
                     lat: parseFloat(item.dataset.lat),
                     lon: parseFloat(item.dataset.lon)
                 };

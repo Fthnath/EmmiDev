@@ -124,6 +124,7 @@ class WeatherModule {
                     name: item.dataset.name,
                     country: item.dataset.country,
                     state: item.dataset.state || '',
+                    source: 'search',
                     lat: parseFloat(item.dataset.lat),
                     lon: parseFloat(item.dataset.lon)
                 };
@@ -147,14 +148,16 @@ class WeatherModule {
             const pos = await new Promise((resolve, reject) =>
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
                     enableHighAccuracy: true,
-                    timeout: 12000,
-                    maximumAge: 5 * 60 * 1000
+                    timeout: 15000,
+                    maximumAge: 60 * 1000
                 })
             );
             const loc = await LocationManager.addFromCoords(
-                pos.coords.latitude, pos.coords.longitude
+                pos.coords.latitude,
+                pos.coords.longitude,
+                { accuracy: pos.coords.accuracy }
             );
-            Toast.success(`Location: ${loc.name}`);
+            Toast.success(`Location: ${formatLocationLabel(loc)}`);
         } catch (err) {
             Toast.error('Could not get your location');
         }
