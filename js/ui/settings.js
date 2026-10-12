@@ -39,16 +39,6 @@ export const Settings = {
         // Units
         const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS) || CONFIG.DEFAULT_UNITS;
         document.documentElement.setAttribute('data-units', units);
-        
-        // API Keys (masked display)
-        const groqInput = $('#groqKeyInput');
-        if (groqInput) {
-            const key = Storage.get(CONFIG.STORAGE_KEYS.GROQ_KEY);
-            groqInput.value = '';
-            groqInput.placeholder = key
-                ? `Saved key ending in ${String(key).slice(-4)} — enter a new key to replace`
-                : 'Paste your Groq API key';
-        }
     },
     
     bindEvents() {
@@ -81,30 +71,6 @@ export const Settings = {
                 Bus.emit(Events.UNITS_CHANGED, v);
             });
         }
-        
-        // Groq key save
-        const groqForm = $('#groqKeyForm');
-        if (groqForm) {
-            groqForm.addEventListener('submit', e => {
-                e.preventDefault();
-                const input = $('#groqKeyInput');
-                const saveButton = $('#groqKeySave');
-                const val = input.value.trim();
-                if (!val) return;
-                if (!/^[\x20-\x7E]+$/.test(val)) {
-                    Toast.error('API keys must contain only standard ASCII characters. Paste the original key, not its masked display.');
-                    return;
-                }
-                if (!Storage.set(CONFIG.STORAGE_KEYS.GROQ_KEY, val)) return;
-                input.value = '';
-                input.placeholder = `Saved key ending in ${val.slice(-4)} — enter a new key to replace`;
-                saveButton.textContent = i18n.t('settings.saved');
-                setTimeout(() => { saveButton.textContent = i18n.t('settings.save'); }, 1500);
-            });
-        }
-
-        const owmForm = $('#owmKeyForm');
-        owmForm?.addEventListener('submit', e => e.preventDefault());
         
         // Clear data
         const clearBtn = $('#clearDataBtn');

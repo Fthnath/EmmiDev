@@ -3,7 +3,7 @@
  * Uses Groq API (user provides key in Settings) OR WebLLM (in-browser, no key).
  */
 
-import { CONFIG } from '../config.js';
+import { CONFIG, getApiKey } from '../config.js';
 import { Storage } from '../core/storage.js';
 import { AppState } from '../core/state.js';
 import { Toast } from '../ui/toast.js';
@@ -100,13 +100,13 @@ class AIModule {
     }
 
     async query(userText) {
-        const storedKey = Storage.get(CONFIG.STORAGE_KEYS.GROQ_KEY);
-        const apiKey = typeof storedKey === 'string' ? storedKey.trim() : '';
+        const configuredKey = getApiKey('GROQ');
+        const apiKey = typeof configuredKey === 'string' ? configuredKey.trim() : '';
         if (!apiKey) {
-            throw new Error('No Groq API key. Add one in Settings → Groq API Key.');
+            throw new Error('No Groq API key configured. Add it in js/config.js under CONFIG.GROQ_API_KEY.');
         }
         if (!/^[\x20-\x7E]+$/.test(apiKey)) {
-            throw new Error('The saved Groq API key contains invalid characters (possibly a masked key). Open Settings, paste the original key, and save it again.');
+            throw new Error('The configured Groq API key contains invalid characters. Check the value in js/config.js.');
         }
 
         const context = this.buildContext();

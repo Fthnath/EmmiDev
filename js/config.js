@@ -1,7 +1,8 @@
 /**
  * EmmiDev Weather — Configuration
- * Public config only. NO SECRETS HERE.
- * API keys are stored in localStorage via the Settings UI.
+ * Public app config only.
+ * For the AI assistant, set your Groq key directly below.
+ * This is the single place you should edit your API key.
  */
 import { Storage } from './core/storage.js';
 
@@ -17,6 +18,7 @@ export const CONFIG = {
     OWM_GEO: 'https://api.openweathermap.org/geo/1.0',
     GROQ_BASE: 'https://api.groq.com/openai/v1',
     GROQ_MODEL: 'openai/gpt-oss-20b',
+    GROQ_API_KEY: 'PASTE_YOUR_GROQ_KEY_HERE',
     STORAGE_KEYS: {
         LOCATIONS: 'emmidev_locations',
         ACTIVE_LOCATION: 'emmidev_active_location',
@@ -49,10 +51,19 @@ export const CONFIG = {
     }
 };
 export function getApiKey(service) {
+    if (service === 'GROQ' && CONFIG.GROQ_API_KEY && CONFIG.GROQ_API_KEY !== 'PASTE_YOUR_GROQ_KEY_HERE') {
+        return CONFIG.GROQ_API_KEY;
+    }
+
     const key = CONFIG.STORAGE_KEYS[service + '_KEY'];
     return key ? Storage.get(key) : null;
 }
 export function setApiKey(service, value) {
+    if (service === 'GROQ') {
+        CONFIG.GROQ_API_KEY = value;
+        return true;
+    }
+
     const key = CONFIG.STORAGE_KEYS[service + '_KEY'];
     return key ? Storage.set(key, value) : false;
 }
