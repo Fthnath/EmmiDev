@@ -74,6 +74,7 @@ async function bootstrap() {
     Bus.on('route:changed', view => {
         if (view === 'maps') WeatherMap.onShow();
         if (view === 'forecast') Weather.resizeCharts();
+        if (view === 'history') Weather.loadHistory();
     });
     Bus.on(Events.LOCATION_CHANGED, location => WeatherMap.setLocation(location));
     if (router.current === 'maps') WeatherMap.onShow();
@@ -98,6 +99,7 @@ async function bootstrap() {
     // ---- 14. Load weather from saved or geolocation ----
     await loadInitialWeather();
     setupWeatherAutoRefresh();
+    if (router.current === 'history') Weather.loadHistory();
 
     // ---- 15. Self-tests in dev ----
     if (isDevEnvironment()) {

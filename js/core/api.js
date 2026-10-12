@@ -163,7 +163,7 @@ export async function fetchAirQuality(lat, lon, options = {}) {
     return cachedFetch(url, CONFIG.CACHE.WEATHER, options);
 }
 
-export async function fetchHistorical(lat, lon, startDate, endDate, units = 'metric') {
+export async function fetchHistorical(lat, lon, startDate, endDate, units = 'metric', options = {}) {
     const coords = validateCoordinates(lat, lon);
     if (units !== 'metric' && units !== 'imperial') {
         throw new TypeError('Units must be "metric" or "imperial"');
@@ -182,7 +182,7 @@ export async function fetchHistorical(lat, lon, startDate, endDate, units = 'met
         timezone: 'auto',
         temperature_unit: tempUnit
     }).toString();
-    return cachedFetch(url, CONFIG.CACHE.HISTORICAL);
+    return cachedFetch(url, CONFIG.CACHE.HISTORICAL, options);
 }
 
 export function weatherCodeToCondition(code) {

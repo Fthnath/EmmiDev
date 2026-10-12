@@ -249,8 +249,8 @@
         <section class="view" data-view="health">
             <div class="container section">
                 <h2 class="section-title" data-i18n="health.title">Health Insights</h2>
-                <p style="text-align:center;max-width:640px;margin:0 auto var(--space-lg);color:var(--text-muted)" data-i18n="health.subtitle">
-                    Health conditions based on current environmental factors
+                <p class="section-note" role="note">
+                    Weather and air-quality guidance only; not a medical diagnosis.
                 </p>
                 <div id="healthCards" class="grid grid-3"></div>
             </div>
@@ -264,9 +264,17 @@
         <section class="view" data-view="farming">
             <div class="container section">
                 <h2 class="section-title" data-i18n="farming.title">Farming Advisor</h2>
-                <p style="text-align:center;max-width:640px;margin:0 auto var(--space-lg);color:var(--text-muted)" data-i18n="farming.subtitle">
-                    Agricultural guidance for your location
-                </p>
+                <div class="farm-controls">
+                    <label for="farmCropSelect">Crop</label>
+                    <select id="farmCropSelect" class="select">
+                        <option value="maize">Maize</option>
+                        <option value="beans">Beans</option>
+                        <option value="cassava">Cassava</option>
+                        <option value="groundnuts">Groundnuts</option>
+                        <option value="rice">Rice</option>
+                        <option value="coffee">Coffee</option>
+                    </select>
+                </div>
                 <div id="farmAdvisor" class="grid grid-2"></div>
             </div>
             <div class="container section">
@@ -321,19 +329,25 @@
         <section class="view" data-view="history">
             <div class="container section">
                 <h2 class="section-title">Historical Weather</h2>
-                <div id="historyContent">
-                    <div class="card">
-                        <div class="card-body" style="text-align:center;padding:48px 24px">
-                            <div class="loader"></div>
-                            <p style="color:var(--text-muted);margin-top:16px">Loading historical data...</p>
-                        </div>
-                    </div>
+                <div class="history-controls">
+                    <label for="historyRange">Period</label>
+                    <select id="historyRange" class="select">
+                        <option value="30">Last 30 days</option>
+                        <option value="90">Last 90 days</option>
+                        <option value="365" selected>Last 12 months</option>
+                    </select>
+                    <button id="historyRefreshBtn" class="btn btn-secondary" type="button" title="Refresh historical data">
+                        <i class="fas fa-rotate"></i> Update
+                    </button>
                 </div>
+                <p id="historyStatus" class="section-note" role="status" aria-live="polite">Historical data will load for the active location.</p>
+                <div id="historyContent" class="grid grid-3"></div>
             </div>
             <div class="container section">
                 <h2 class="section-title">Climate Trends</h2>
                 <div class="chart-container">
                     <canvas id="climateChart"></canvas>
+                    <p id="climateChartStatus" class="chart-status" role="status" hidden></p>
                 </div>
             </div>
         </section>

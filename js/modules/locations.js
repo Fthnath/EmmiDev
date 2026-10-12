@@ -22,6 +22,7 @@ class LocationManagerClass {
         this._list = [];
         this._recent = [];
         this._listeners = [];
+        this._uiBound = false;
     }
 
     async init() {
@@ -35,6 +36,18 @@ class LocationManagerClass {
             this._list.push(def);
             Storage.set(CONFIG.STORAGE_KEYS.LOCATIONS, this._list);
         }
+
+        this.bindUI();
+    }
+
+    bindUI() {
+        if (this._uiBound) return;
+        this._uiBound = true;
+
+        const addButton = document.getElementById('addLocationBtn');
+        addButton?.addEventListener('click', () => this.showAddLocationModal());
+        this.onChange(() => this.renderLocationsView(document.getElementById('locationsList')));
+        this.renderLocationsView(document.getElementById('locationsList'));
     }
 
     // ---------- GETTERS ----------
@@ -79,11 +92,6 @@ class LocationManagerClass {
     add(loc, silent = false) {
         if (!loc || loc.lat == null || loc.lon == null) return null;
 
-        if (this._list.length >= CONFIG.MAX_LOCATIONS) {
-            if (!silent) Toast.warning(`Max ${CONFIG.MAX_LOCATIONS} locations`);
-            return null;
-        }
-
         if (this.has(loc.lat, loc.lon)) {
             const existing = this._list.find(l => this._sameCoord(l, loc));
             for (const key of ['name', 'country', 'countryName', 'neighbourhood', 'division', 'district', 'state', 'source', 'precise', 'accuracy']) {
@@ -94,6 +102,11 @@ class LocationManagerClass {
             Storage.set(CONFIG.STORAGE_KEYS.LOCATIONS, this._list);
             if (!silent) Toast.info(`${existing.name} is already saved`);
             return existing;
+        }
+
+        if (this._list.length >= CONFIG.MAX_LOCATIONS) {
+            if (!silent) Toast.warning(`Max ${CONFIG.MAX_LOCATIONS} locations`);
+            return null;
         }
 
         const item = {
@@ -243,9 +256,9 @@ class LocationManagerClass {
             <div style="padding:0">
                 <div class="search-bar" style="margin-bottom:16px;max-width:100%">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="modalSearchInput" placeholder="Search city name..." autocomplete="off">
+                    <input type="text" id="modalSearchInput" placeholder="Search for a city or town..." autocomplete="off">
                 </div>
-                <div id="modalSearchResults" style="max-height:340px;overflow-y:auto"></div>
+                <div id="modalSearchResults" role="status" aria-live="polite" style="max-height:340px;overflow-y:auto"></div>
             </div>
         `;
 
@@ -258,53 +271,70 @@ class LocationManagerClass {
         const input = body.querySelector('#modalSearchInput');
         const results = body.querySelector('#modalSearchResults');
 
-        // Show recents initially
-        if (this._recent.length) {
-            results.innerHTML = `
-                <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;letter-spacing:0.5px;margin-bottom:8px">
-                    RECENT
-                </div>
-                ${this._recent.map(c => `
-                    <div class="suggestion-item" data-lat="${c.lat}" data-lon="${c.lon}"
-                        data-name="${this._esc(c.name)}" data-country="${this._esc(c.country)}">
-                        <i class="fas fa-history"></i>
-                        <span>${this._esc(c.name)}${c.state ? ', ' + this._esc(c.state) : ''}${c.country ? ', ' + this._esc(c.country) : ''}</span>
-                    </div>
-                `).join('')}
-            `;
-            this._wireModalResults(results);
-        }
+        this.renderRecentSuggestions(results);
 
         let debounceTimer;
+        let requestId = 0;
         input.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             const q = input.value.trim();
-            if (q.length < 2) return;
+            const currentRequest = ++requestId;
+            if (q.length < 2) {
+                this.renderRecentSuggestions(results);
+                return;
+            }
+
+            results.innerHTML = `<div style="text-align:center;padding:20px"><div class="loader loader-inline"></div><span>Searching...</span></div>`;
             debounceTimer = setTimeout(async () => {
-                results.innerHTML = `<div style="text-align:center;padding:20px"><div class="loader loader-inline"></div></div>`;
-                const cities = await this.search(q);
-                if (!cities.length) {
-                    results.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted)">No results</div>`;
-                    return;
+                try {
+                    const cities = await this.search(q);
+                    if (currentRequest !== requestId || !body.isConnected) return;
+                    if (!cities.length) {
+                        results.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted)">No matching places found.</div>`;
+                        return;
+                    }
+                    results.innerHTML = cities.map(c => `
+                        <div class="suggestion-item" role="button" tabindex="0" data-lat="${c.lat}" data-lon="${c.lon}"
+                            data-name="${this._esc(c.name)}" data-country="${this._esc(c.country)}"
+                            data-state="${this._esc(c.state)}">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>${this._esc(c.name)}${c.state ? ', ' + this._esc(c.state) : ''}, ${this._esc(c.country)}</span>
+                        </div>
+                    `).join('');
+                    this._wireModalResults(results);
+                } catch (err) {
+                    if (currentRequest !== requestId || !body.isConnected) return;
+                    results.innerHTML = `<div style="text-align:center;padding:20px;color:var(--danger)">Search failed. Check your connection and try again.</div>`;
+                    console.error('[LocationManager] Place search failed:', err);
                 }
-                results.innerHTML = cities.map(c => `
-                    <div class="suggestion-item" data-lat="${c.lat}" data-lon="${c.lon}"
-                        data-name="${this._esc(c.name)}" data-country="${this._esc(c.country)}"
-                        data-state="${this._esc(c.state)}">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <span>${this._esc(c.name)}${c.state ? ', ' + this._esc(c.state) : ''}, ${this._esc(c.country)}</span>
-                    </div>
-                `).join('');
-                this._wireModalResults(results);
             }, 300);
         });
 
         input.focus();
     }
 
+    renderRecentSuggestions(container) {
+        if (!this._recent.length) {
+            container.innerHTML = `<div style="text-align:center;padding:20px;color:var(--text-muted)">Type at least 2 letters to search for a place.</div>`;
+            return;
+        }
+
+        container.innerHTML = `
+            <div style="font-size:0.75rem;color:var(--text-muted);font-weight:600;margin-bottom:8px">RECENT</div>
+            ${this._recent.map(c => `
+                <div class="suggestion-item" role="button" tabindex="0" data-lat="${c.lat}" data-lon="${c.lon}"
+                    data-name="${this._esc(c.name)}" data-country="${this._esc(c.country)}" data-state="${this._esc(c.state)}">
+                    <i class="fas fa-history"></i>
+                    <span>${this._esc(c.name)}${c.state ? ', ' + this._esc(c.state) : ''}${c.country ? ', ' + this._esc(c.country) : ''}</span>
+                </div>
+            `).join('')}
+        `;
+        this._wireModalResults(container);
+    }
+
     _wireModalResults(container) {
         container.querySelectorAll('.suggestion-item').forEach(item => {
-            item.addEventListener('click', () => {
+            const selectPlace = () => {
                 const city = {
                     name: item.dataset.name,
                     country: item.dataset.country,
@@ -313,11 +343,23 @@ class LocationManagerClass {
                     lat: parseFloat(item.dataset.lat),
                     lon: parseFloat(item.dataset.lon)
                 };
+                if (this.count() >= CONFIG.MAX_LOCATIONS && !this.has(city.lat, city.lon)) {
+                    Toast.warning(`Max ${CONFIG.MAX_LOCATIONS} locations`);
+                    return;
+                }
                 this.pushRecent(city);
                 const added = this.add(city, true);
                 this.setActive(added || city);
                 Modal.closeAll();
                 Toast.success(`Now showing ${city.name}`);
+            };
+
+            item.addEventListener('click', selectPlace);
+            item.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    selectPlace();
+                }
             });
         });
     }

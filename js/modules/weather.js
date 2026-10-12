@@ -7,18 +7,28 @@ import { CONFIG } from '../config.js';
 import { Storage } from '../core/storage.js';
 import { AppState } from '../core/state.js';
 import { Bus, Events } from '../core/events.js';
-import { fetchWeather, fetchAirQuality, weatherCodeToCondition, weatherCodeToDescription } from '../core/api.js';
+import { fetchWeather, fetchAirQuality, fetchHistorical, weatherCodeToCondition, weatherCodeToDescription } from '../core/api.js';
 import { formatTemp, formatWind, formatPercent, formatPressure, formatRain, windDirection } from '../utils/format.js';
 import { formatTime, formatDay, formatShort } from '../utils/date.js';
 import { Toast } from '../ui/toast.js';
 import { i18n } from '../ui/i18n.js';
 import { LocationManager, formatLocationLabel } from './locations.js';
 
+const FARM_CROPS = {
+    maize: { name: 'Maize', minTemp: 18, maxTemp: 32, plantingMonths: [2, 3, 7, 8], guidance: 'Avoid waterlogged soil; check moisture before sowing.' },
+    beans: { name: 'Beans', minTemp: 16, maxTemp: 28, plantingMonths: [2, 3, 7, 8], guidance: 'Steady moisture is especially useful during flowering and pod formation.' },
+    cassava: { name: 'Cassava', minTemp: 20, maxTemp: 32, plantingMonths: [1, 2, 7, 8, 9], guidance: 'Use healthy planting material and avoid waterlogged ground.' },
+    groundnuts: { name: 'Groundnuts', minTemp: 20, maxTemp: 32, plantingMonths: [2, 3, 7, 8], guidance: 'Well-drained soil helps reduce pod and root problems.' },
+    rice: { name: 'Rice', minTemp: 20, maxTemp: 35, plantingMonths: [2, 3, 8, 9], guidance: 'Rainfall alone does not confirm field water availability; check irrigation and drainage.' },
+    coffee: { name: 'Coffee', minTemp: 18, maxTemp: 30, plantingMonths: [2, 3, 7, 8], guidance: 'Young plants benefit from shade, mulch, and moisture during establishment.' }
+};
+
 class WeatherModule {
     constructor() {
         this.data = null;
         this.aq = null;
         this.container = null;
+        this.historyRequestId = 0;
     }
 
     init() {
@@ -39,6 +49,25 @@ class WeatherModule {
         if (geoBtn) {
             geoBtn.addEventListener('click', () => this.useMyLocation());
         }
+
+        const cropSelect = document.getElementById('farmCropSelect');
+        if (cropSelect) {
+            cropSelect.value = this.selectedCrop();
+            cropSelect.addEventListener('change', () => {
+                const profile = Storage.get(CONFIG.STORAGE_KEYS.FARM_PROFILE, {});
+                const savedProfile = profile && typeof profile === 'object' && !Array.isArray(profile) ? profile : {};
+                Storage.set(CONFIG.STORAGE_KEYS.FARM_PROFILE, { ...savedProfile, crop: cropSelect.value });
+                if (this.data) this.renderFarming(this.data);
+            });
+        }
+
+        document.getElementById('historyRange')?.addEventListener('change', () => this.loadHistory());
+        document.getElementById('historyRefreshBtn')?.addEventListener('click', () => this.loadHistory({ refresh: true }));
+        Bus.on(Events.LOCATION_CHANGED, () => {
+            if (document.querySelector('.view[data-view="history"]')?.classList.contains('view-active')) {
+                this.loadHistory();
+            }
+        });
 
         // React to unit changes
         Bus.on(Events.UNITS_CHANGED, () => {
@@ -192,10 +221,10 @@ class WeatherModule {
             AppState.set('activeLocation', location);
 
             this.render(weather);
-            this.renderAirQuality(aq);
+            this.renderHealth(weather, aq);
             this.updateScene(weather, location);
             this.renderLifestyle(weather);
-            this.renderQuickHealth(weather, aq);
+            this.renderFarming(weather);
 
             // Persist last location
             Storage.set(CONFIG.STORAGE_KEYS.ACTIVE_LOCATION, location);
@@ -567,6 +596,7 @@ class WeatherModule {
     resizeCharts() {
         this._tempChart?.resize();
         this._humChart?.resize();
+        this._climateChart?.resize();
     }
 
     renderLifestyle(data) {
@@ -658,96 +688,104 @@ class WeatherModule {
         return { text, tips };
     }
 
-    renderAirQuality(aq) {
-        if (!aq || !aq.current) return;
+    renderHealth(data, aq) {
+        if (!data?.current) return;
+        const current = data.current;
+        const imperial = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric') === 'imperial';
+        const apparent = Number(current.apparent_temperature ?? current.temperature_2m);
+        const apparentCelsius = imperial ? (apparent - 32) * 5 / 9 : apparent;
+        const windSpeedKmh = Number(current.wind_speed_10m) * (imperial ? 1.60934 : 1);
+        const heat = this.heatRisk(apparentCelsius);
+        const uv = Number(data.daily?.uv_index_max?.[0]);
+        const uvRisk = !Number.isFinite(uv)
+            ? { level: 'Unavailable', color: '#64748b', advice: 'UV data was not returned for this location.' }
+            : uv >= 8
+                ? { level: 'Very high', color: '#dc2626', advice: 'Limit midday exposure; use shade, protective clothing, and sunscreen.' }
+                : uv >= 6
+                    ? { level: 'High', color: '#ea580c', advice: 'Use shade and sun protection when outdoors.' }
+                    : uv >= 3
+                        ? { level: 'Moderate', color: '#ca8a04', advice: 'Consider sun protection during extended outdoor activity.' }
+                        : { level: 'Low', color: '#16a34a', advice: 'Lower UV exposure is forecast; use usual sun protection.' };
+        const condition = this.currentCondition(current);
+        const weather = condition === 'thunderstorm'
+            ? { level: 'Storm', color: '#dc2626', advice: 'Move indoors and avoid exposed areas during thunderstorms.' }
+            : ['rain', 'drizzle'].includes(condition)
+                ? { level: 'Wet', color: '#2563eb', advice: 'Expect wet surfaces; use rain protection and take care on roads.' }
+                : windSpeedKmh >= 40
+                    ? { level: 'Windy', color: '#ca8a04', advice: 'Secure loose items and use care around trees or structures.' }
+                    : { level: 'Fair', color: '#16a34a', advice: 'No significant rain or high-wind signal in current conditions.' };
+        const aqiValue = aq?.current?.european_aqi ?? aq?.current?.us_aqi;
+        const air = Number.isFinite(aqiValue)
+            ? aqiValue >= 100
+                ? { level: 'Elevated', color: '#dc2626', advice: 'Sensitive people may wish to reduce prolonged outdoor exertion.' }
+                : aqiValue >= 50
+                    ? { level: 'Moderate', color: '#ca8a04', advice: 'People sensitive to air pollution should monitor symptoms outdoors.' }
+                    : { level: 'Lower', color: '#16a34a', advice: 'The reported air-quality index is relatively low.' }
+            : { level: 'Unavailable', color: '#64748b', advice: 'Air-quality data is not available for this location right now.' };
+
+        const cards = [
+            this.riskCard('Heat & hydration', 'fa-temperature-high', heat),
+            this.riskCard('UV exposure', 'fa-sun', uvRisk),
+            this.riskCard('Weather exposure', 'fa-cloud-rain', weather),
+            this.riskCard('Air quality', 'fa-lungs', air)
+        ];
+        const healthCards = document.getElementById('healthCards');
+        const quickCards = document.getElementById('quickHealthCards');
+        if (healthCards) healthCards.innerHTML = cards.join('');
+        if (quickCards) quickCards.innerHTML = cards.slice(0, 3).join('');
+        this.renderAirQuality(aq, uv);
+    }
+
+    renderAirQuality(aq, forecastUv) {
         const container = document.getElementById('environmentalHealth');
         if (!container) return;
+        const current = aq?.current;
+        if (!current) {
+            container.innerHTML = `<div class="health-card"><h3 class="health-title">Environmental data unavailable</h3><p class="section-note">Air-quality readings could not be loaded for this location.</p></div>`;
+            return;
+        }
 
-        const c = aq.current;
-        const aqi = c.european_aqi ?? c.us_aqi ?? 0;
-        const level = aqi < 20 ? 'Good' : aqi < 40 ? 'Fair' : aqi < 60 ? 'Moderate' : aqi < 80 ? 'Poor' : 'Very Poor';
-        const color = aqi < 20 ? '#22c55e' : aqi < 40 ? '#84cc16' : aqi < 60 ? '#f59e0b' : aqi < 80 ? '#ef4444' : '#7c2d12';
+        const valid = value => value != null && Number.isFinite(Number(value));
+        const shown = (value, digits = 1) => valid(value) ? Number(value).toFixed(digits) : 'Not reported';
+        const aqi = valid(current.european_aqi) ? Number(current.european_aqi) : valid(current.us_aqi) ? Number(current.us_aqi) : null;
+        const level = aqi == null ? 'Unavailable' : aqi >= 100 ? 'Poor' : aqi >= 50 ? 'Moderate' : 'Good';
+        const color = aqi == null ? '#64748b' : aqi >= 100 ? '#dc2626' : aqi >= 50 ? '#ca8a04' : '#16a34a';
+        const uv = valid(current.uv_index) ? Number(current.uv_index) : forecastUv;
+        const pollenFields = ['grass_pollen', 'birch_pollen', 'ragweed_pollen'];
+        const pollen = pollenFields.filter(key => valid(current[key]));
+        const pollutant = (name, key) => `<li>${name}: ${shown(current[key])}${valid(current[key]) ? ' μg/m³' : ''}</li>`;
 
         container.innerHTML = `
             <div class="health-card">
                 <div class="health-icon" style="color:${color}"><i class="fas fa-lungs"></i></div>
                 <h3 class="health-title">Air Quality</h3>
                 <div class="health-metrics">
-                    <div class="metric">
-                        <div class="metric-value" style="color:${color}">${Math.round(aqi)}</div>
-                        <div class="metric-label">AQI</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-value" style="color:${color}">${level}</div>
-                        <div class="metric-label">Status</div>
-                    </div>
+                    <div class="metric"><div class="metric-value" style="color:${color}">${aqi == null ? '—' : Math.round(aqi)}</div><div class="metric-label">AQI</div></div>
+                    <div class="metric"><div class="metric-value" style="color:${color}">${level}</div><div class="metric-label">Status</div></div>
                 </div>
                 <ul class="health-list">
-                    <li>PM2.5: ${(c.pm2_5 ?? 0).toFixed(1)} μg/m³</li>
-                    <li>PM10: ${(c.pm10 ?? 0).toFixed(1)} μg/m³</li>
-                    <li>O₃: ${(c.ozone ?? 0).toFixed(1)} μg/m³</li>
-                    <li>NO₂: ${(c.nitrogen_dioxide ?? 0).toFixed(1)} μg/m³</li>
+                    ${pollutant('PM2.5', 'pm2_5')}
+                    ${pollutant('PM10', 'pm10')}
+                    ${pollutant('Ozone', 'ozone')}
+                    ${pollutant('Nitrogen dioxide', 'nitrogen_dioxide')}
                 </ul>
             </div>
             <div class="health-card">
-                <div class="health-icon" style="color:#f59e0b"><i class="fas fa-sun"></i></div>
+                <div class="health-icon" style="color:#ca8a04"><i class="fas fa-sun"></i></div>
                 <h3 class="health-title">UV Index</h3>
-                <div class="health-metrics">
-                    <div class="metric">
-                        <div class="metric-value">${Math.round(c.uv_index ?? 0)}</div>
-                        <div class="metric-label">UV</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-value">${(c.uv_index ?? 0) < 3 ? 'Low' : (c.uv_index ?? 0) < 6 ? 'Moderate' : (c.uv_index ?? 0) < 8 ? 'High' : 'Very High'}</div>
-                        <div class="metric-label">Risk</div>
-                    </div>
-                </div>
-                <ul class="health-list">
-                    <li>${(c.uv_index ?? 0) > 3 ? 'Apply sunscreen' : 'Minimal sun protection needed'}</li>
-                    <li>Wear sunglasses if outdoors</li>
-                </ul>
+                <div class="health-metrics"><div class="metric"><div class="metric-value">${Number.isFinite(uv) ? uv.toFixed(1) : '—'}</div><div class="metric-label">Current / forecast</div></div></div>
+                <p>${!Number.isFinite(uv) ? 'UV data is unavailable.' : uv >= 6 ? 'Use shade and sun protection during peak daylight.' : uv >= 3 ? 'Sun protection may be useful during extended outdoor activity.' : 'Lower UV exposure is currently reported.'}</p>
             </div>
             <div class="health-card">
-                <div class="health-icon" style="color:#84cc16"><i class="fas fa-leaf"></i></div>
+                <div class="health-icon" style="color:#65a30d"><i class="fas fa-leaf"></i></div>
                 <h3 class="health-title">Pollen</h3>
-                <div class="health-metrics">
-                    <div class="metric">
-                        <div class="metric-value">${Math.round((c.grass_pollen ?? 0) + (c.birch_pollen ?? 0))}</div>
-                        <div class="metric-label">Total</div>
-                    </div>
-                    <div class="metric">
-                        <div class="metric-value">${((c.grass_pollen ?? 0) > 20 ? 'High' : (c.grass_pollen ?? 0) > 5 ? 'Moderate' : 'Low')}</div>
-                        <div class="metric-label">Level</div>
-                    </div>
-                </div>
-                <ul class="health-list">
-                    <li>Grass: ${Math.round(c.grass_pollen ?? 0)}</li>
-                    <li>Birch: ${Math.round(c.birch_pollen ?? 0)}</li>
-                    <li>Ragweed: ${Math.round(c.ragweed_pollen ?? 0)}</li>
-                </ul>
+                ${pollen.length ? `<ul class="health-list">${pollen.map(key => `<li>${this.esc(key.replace('_pollen', '').replace('_', ' '))}: ${shown(current[key])} grains/m³</li>`).join('')}</ul>` : '<p>Pollen readings are not reported for this location.</p>'}
             </div>
         `;
     }
 
     renderQuickHealth(data, aq) {
-        const container = document.getElementById('quickHealthCards');
-        if (!container) return;
-
-        const cur = data.current;
-        const temp = cur.temperature_2m;
-        const humidity = cur.relative_humidity_2m;
-        const pressure = cur.pressure_msl;
-
-        // Simplified risk calculations
-        const malaria = this.malariaRisk(temp, humidity);
-        const heat = this.heatRisk(temp, humidity);
-        const migraine = this.migraineRisk(pressure);
-
-        container.innerHTML = `
-            ${this.riskCard('Malaria Risk', 'fa-mosquito', malaria)}
-            ${this.riskCard('Heat Stress', 'fa-temperature-high', heat)}
-            ${this.riskCard('Migraine Risk', 'fa-head-side-virus', migraine)}
-        `;
+        this.renderHealth(data, aq);
     }
 
     riskCard(title, icon, risk) {
@@ -755,35 +793,175 @@ class WeatherModule {
             <div class="health-card">
                 <div class="health-icon" style="color:${risk.color}"><i class="fas ${icon}"></i></div>
                 <h3 class="health-title">${title}</h3>
-                <div style="font-size:1.8rem;font-weight:800;color:${risk.color};margin:12px 0">${risk.level}</div>
+                <div style="font-size:1.35rem;font-weight:800;color:${risk.color};margin:12px 0">${risk.level}</div>
                 <p style="color:var(--text-muted);font-size:0.9rem">${risk.advice}</p>
             </div>
         `;
     }
 
-    malariaRisk(temp, humidity) {
-        let score = 0;
-        if (temp >= 18 && temp <= 32) score += 40;
-        if (humidity > 60) score += 30;
-        if (temp > 24 && humidity > 70) score += 30;
-        if (score >= 70) return { level: 'High', color: '#ef4444', advice: 'Use mosquito nets and repellent.' };
-        if (score >= 40) return { level: 'Moderate', color: '#f59e0b', advice: 'Take precautions at dusk.' };
-        return { level: 'Low', color: '#22c55e', advice: 'Standard protection is fine.' };
+    heatRisk(apparentTemperature) {
+        if (!Number.isFinite(Number(apparentTemperature))) return { level: 'Unavailable', color: '#64748b', advice: 'Feels-like temperature is unavailable.' };
+        if (apparentTemperature >= 40) return { level: 'Very hot', color: '#dc2626', advice: 'Avoid strenuous activity in direct sun; take breaks and drink water.' };
+        if (apparentTemperature >= 35) return { level: 'Hot', color: '#ea580c', advice: 'Prefer shade and reduce strenuous outdoor activity.' };
+        if (apparentTemperature >= 30) return { level: 'Warm', color: '#ca8a04', advice: 'Take water and rest breaks during outdoor work.' };
+        return { level: 'Typical', color: '#16a34a', advice: 'Use normal precautions and drink water as needed.' };
     }
 
-    heatRisk(temp, humidity) {
-        const heatIndex = temp + (humidity / 100) * (temp - 14);
-        if (heatIndex > 40) return { level: 'Extreme', color: '#7c2d12', advice: 'Avoid outdoor activity.' };
-        if (heatIndex > 32) return { level: 'High', color: '#ef4444', advice: 'Hydrate and seek shade.' };
-        if (heatIndex > 27) return { level: 'Moderate', color: '#f59e0b', advice: 'Stay hydrated.' };
-        return { level: 'Low', color: '#22c55e', advice: 'Comfortable conditions.' };
+    selectedCrop() {
+        const profile = Storage.get(CONFIG.STORAGE_KEYS.FARM_PROFILE, {});
+        const crop = typeof profile === 'string' ? profile : profile?.crop;
+        return FARM_CROPS[crop] ? crop : 'maize';
     }
 
-    migraineRisk(pressure) {
-        const distFromNormal = Math.abs(pressure - 1013);
-        if (distFromNormal > 15) return { level: 'High', color: '#ef4444', advice: 'Pressure swing may trigger migraines.' };
-        if (distFromNormal > 8) return { level: 'Moderate', color: '#f59e0b', advice: 'Stay hydrated, avoid stress.' };
-        return { level: 'Low', color: '#22c55e', advice: 'Stable conditions.' };
+    renderFarming(data) {
+        const advisor = document.getElementById('farmAdvisor');
+        const calendar = document.getElementById('cropCalendar');
+        if (!data?.daily) return;
+        const cropKey = this.selectedCrop();
+        const crop = FARM_CROPS[cropKey];
+        const select = document.getElementById('farmCropSelect');
+        if (select && select.value !== cropKey) select.value = cropKey;
+        const daily = data.daily;
+        const days = Math.min(10, daily.time?.length || 0);
+        const rainfall = daily.precipitation_sum || [];
+        const rainProbability = daily.precipitation_probability_max || [];
+        const rainTotal = rainfall.slice(0, days).reduce((sum, value) => sum + (Number(value) || 0), 0);
+        const rainyDays = rainfall.slice(0, days).filter((value, index) => Number(value) >= 1 || Number(rainProbability[index]) >= 40).length;
+        const highs = (daily.temperature_2m_max || []).slice(0, days).filter(Number.isFinite);
+        const avgHigh = highs.length ? highs.reduce((sum, value) => sum + value, 0) / highs.length : null;
+        const imperial = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric') === 'imperial';
+        const avgHighCelsius = avgHigh == null ? null : imperial ? (avgHigh - 32) * 5 / 9 : avgHigh;
+        const tempUnit = imperial ? '°F' : '°C';
+        const temperatureFit = avgHigh == null ? 'Temperature outlook unavailable.'
+            : avgHighCelsius > crop.maxTemp ? `Forecast daytime highs average ${avgHigh.toFixed(0)}${tempUnit}, above the general ${crop.name} range.`
+                : avgHighCelsius < crop.minTemp ? `Forecast daytime highs average ${avgHigh.toFixed(0)}${tempUnit}, below the general ${crop.name} range.`
+                    : `Forecast daytime highs average ${avgHigh.toFixed(0)}${tempUnit}, within the general ${crop.name} range.`;
+        const rainOutlook = rainyDays >= 3 && rainTotal >= 15
+            ? `${rainyDays} of the next ${days} days show a rain signal (${rainTotal.toFixed(1)} mm forecast). Check soil moisture before planting.`
+            : rainyDays <= 1 || rainTotal < 8
+                ? `Limited rain is forecast over the next ${days} days (${rainTotal.toFixed(1)} mm). Consider delaying sowing or arranging water.`
+                : `Some rain is forecast over the next ${days} days (${rainTotal.toFixed(1)} mm). Recheck the forecast and field moisture before sowing.`;
+
+        if (advisor) {
+            advisor.innerHTML = `
+                <article class="health-card farm-advice-card"><h3 class="health-title">${crop.name}: next ${days} days</h3><p>${this.esc(rainOutlook)}</p></article>
+                <article class="health-card farm-advice-card"><h3 class="health-title">Temperature outlook</h3><p>${this.esc(temperatureFit)}</p><p class="section-note">Forecasts guide planning but cannot measure soil moisture or guarantee rainfall.</p></article>
+                <article class="health-card farm-advice-card"><h3 class="health-title">Field note</h3><p>${this.esc(crop.guidance)}</p></article>
+                <article class="health-card farm-advice-card"><h3 class="health-title">Active location</h3><p>${this.esc(formatLocationLabel(this.location || LocationManager.getActive()) || 'Location unavailable')}</p><p class="section-note">Use local extension advice and seed guidance for final decisions.</p></article>
+            `;
+        }
+
+        if (calendar) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            calendar.innerHTML = `
+                <p class="crop-calendar-note">General East African planting windows for ${crop.name}; local rainfall patterns vary.</p>
+                <div class="crop-months">${months.map((month, index) => `<div class="crop-month${crop.plantingMonths.includes(index) ? ' crop-month-active' : ''}"><span>${month}</span>${crop.plantingMonths.includes(index) ? '<i class="fas fa-seedling" aria-label="Typical planting window"></i>' : ''}</div>`).join('')}</div>
+            `;
+        }
+    }
+
+    async loadHistory({ refresh = false } = {}) {
+        const location = this.location || LocationManager.getActive();
+        const status = document.getElementById('historyStatus');
+        const container = document.getElementById('historyContent');
+        const range = document.getElementById('historyRange');
+        if (!location || !container) return;
+        const days = Number(range?.value) || 365;
+        const requestId = ++this.historyRequestId;
+        const refreshButton = document.getElementById('historyRefreshBtn');
+        if (refreshButton) refreshButton.disabled = true;
+        if (status) status.textContent = 'Loading historical weather…';
+
+        const end = new Date();
+        end.setUTCHours(0, 0, 0, 0);
+        end.setUTCDate(end.getUTCDate() - 5);
+        const start = new Date(end);
+        start.setUTCDate(start.getUTCDate() - days + 1);
+        const startDate = start.toISOString().slice(0, 10);
+        const endDate = end.toISOString().slice(0, 10);
+
+        try {
+            const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
+            const result = await fetchHistorical(location.lat, location.lon, startDate, endDate, units, { refresh });
+            if (requestId !== this.historyRequestId) return;
+            this.renderHistory(result, location, startDate, endDate, units);
+        } catch (err) {
+            if (requestId !== this.historyRequestId) return;
+            if (status) status.textContent = `Historical data is unavailable: ${err.message}`;
+            container.innerHTML = '';
+            this._climateChart?.destroy();
+            this._climateChart = null;
+            const chartStatus = document.getElementById('climateChartStatus');
+            if (chartStatus) {
+                chartStatus.hidden = false;
+                chartStatus.textContent = 'No historical chart data is available.';
+            }
+        } finally {
+            if (requestId === this.historyRequestId && refreshButton) refreshButton.disabled = false;
+        }
+    }
+
+    renderHistory(result, location, startDate, endDate, units = 'metric') {
+        const daily = result?.daily;
+        const status = document.getElementById('historyStatus');
+        const container = document.getElementById('historyContent');
+        if (!daily?.time?.length || !container) {
+            if (status) status.textContent = 'No historical observations were returned for this period.';
+            container.innerHTML = '';
+            this._climateChart?.destroy();
+            this._climateChart = null;
+            return;
+        }
+
+        const validValues = values => (values || []).filter(value => Number.isFinite(value));
+        const means = validValues(daily.temperature_2m_mean);
+        const highs = validValues(daily.temperature_2m_max);
+        const rainfall = validValues(daily.precipitation_sum);
+        const mean = means.length ? means.reduce((sum, value) => sum + value, 0) / means.length : null;
+        const totalRain = rainfall.reduce((sum, value) => sum + value, 0);
+        const rainyDays = rainfall.filter(value => value >= 1).length;
+        const max = highs.length ? Math.max(...highs) : null;
+        const unit = units === 'imperial' ? '°F' : '°C';
+        const stat = (title, value, note) => `<article class="health-card history-stat"><h3 class="health-title">${title}</h3><div class="history-stat-value">${value}</div><p class="section-note">${note}</p></article>`;
+        container.innerHTML = [
+            stat('Average temperature', mean == null ? '—' : `${mean.toFixed(1)}${unit}`, `${means.length} daily readings`),
+            stat('Highest daily maximum', max == null ? '—' : `${max.toFixed(1)}${unit}`, 'Across the selected period'),
+            stat('Rainfall', `${totalRain.toFixed(1)} mm`, `${rainyDays} days with at least 1 mm`)
+        ].join('');
+        if (status) status.textContent = `${formatLocationLabel(location)} · ${startDate} to ${endDate} · Historical model data`;
+
+        const chartStatus = document.getElementById('climateChartStatus');
+        const canvas = document.getElementById('climateChart');
+        if (!window.Chart || !canvas) {
+            if (chartStatus) {
+                chartStatus.hidden = false;
+                chartStatus.textContent = 'Chart library is unavailable; summary values are still shown.';
+            }
+            return;
+        }
+        if (chartStatus) chartStatus.hidden = true;
+        this._climateChart?.destroy();
+        this._climateChart = new window.Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels: daily.time,
+                datasets: [
+                    { type: 'line', label: `Mean temperature (${unit})`, data: daily.temperature_2m_mean || [], borderColor: '#dc6b32', backgroundColor: 'rgba(220,107,50,0.12)', yAxisID: 'temperature', pointRadius: 0, tension: 0.25 },
+                    { type: 'bar', label: 'Precipitation (mm)', data: daily.precipitation_sum || [], backgroundColor: 'rgba(37,99,235,0.45)', yAxisID: 'precipitation' }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 8 } },
+                    temperature: { type: 'linear', position: 'left', title: { display: true, text: unit } },
+                    precipitation: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'mm' } }
+                }
+            }
+        });
     }
 
     // ============ SCENE ============
