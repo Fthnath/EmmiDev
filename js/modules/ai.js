@@ -7,7 +7,7 @@ import { CONFIG, getApiKey } from '../config.js';
 import { Storage } from '../core/storage.js';
 import { AppState } from '../core/state.js';
 import { Toast } from '../ui/toast.js';
-import { LocationManager } from './locations.js';
+import { LocationManager, formatLocationLabel } from './locations.js';
 
 class AIModule {
     constructor() {
@@ -156,7 +156,7 @@ Reply concisely (2-4 sentences) and be practical. If asked about farming, give s
         const cur = w.current;
         const today = w.daily;
         const lines = [
-            `Location: ${loc?.name || 'Unknown'}${loc?.country ? ', ' + loc.country : ''}`,
+            `Location: ${formatLocationLabel(loc) || 'Unknown'}`,
             `Temperature: ${Math.round(cur.temperature_2m)}°C (feels like ${Math.round(cur.apparent_temperature)}°C)`,
             `Condition: ${cur.weather_code} code`,
             `Humidity: ${Math.round(cur.relative_humidity_2m)}%`,

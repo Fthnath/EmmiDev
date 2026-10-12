@@ -3,7 +3,7 @@
  * Canvas-based, 60fps, weather-reactive scenes.
  *
  * Features:
- *   - 3D-perspective human figures (walking, umbrella, weather-appropriate)
+ *   - Animated walking character sprites
  *   - Rain with splash + puddles + lightning
  *   - Sun with rays + heat shimmer
  *   - Drifting clouds (layered)
@@ -44,6 +44,8 @@ export class WeatherScene {
         this.clouds = [];
         this.trees = [];
         this.persons = [];
+        this.walkerImage = new Image();
+        this.walkerImage.src = new URL('../../walking_boy.gif', import.meta.url).href;
         this.lightning = { active: false, flash: 0, next: 0 };
         
         this._boundAnimate = this._animate.bind(this);
@@ -132,18 +134,14 @@ export class WeatherScene {
     
     _initPersons() {
         this.persons = [];
-        const showUmbrella = ['rain', 'drizzle', 'thunderstorm'].includes(this.condition);
-        // 2-3 persons at different depths
+        // Keep varied scales to preserve the scene's sense of depth.
         for (let i = 0; i < 3; i++) {
             const depth = i / 2;
             this.persons.push({
                 x: Math.random() * this.width,
                 speed: 0.3 + Math.random() * 0.4,
                 scale: 0.7 + depth * 0.6,
-                y: this.groundY + depth * 20,
-                step: Math.random() * Math.PI * 2,
-                umbrella: showUmbrella,
-                coat: this.temperature < 12 ? 'heavy' : this.temperature > 28 ? 'light' : 'normal'
+                y: this.groundY + depth * 20
             });
         }
     }
@@ -307,7 +305,7 @@ export class WeatherScene {
         // 8. Puddles (rain)
         if (this.particles.puddles.length) this._drawPuddles();
         
-        // 9. Humans (3D-perspective)
+        // 9. Walking character sprites
         this._drawPersons();
         
         // 10. Weather particles (rain/snow/leaves/dust)
@@ -570,10 +568,20 @@ export class WeatherScene {
                 p.x = -40;
                 p.y = this.groundY + (p.scale - 0.7) * 20;
             }
-            p.step += 0.15;
-            
-            this._drawHuman(p.x, p.y, p.scale, p.umbrella, p.step, p.coat);
+            this._drawWalker(p.x, p.y, p.scale);
         });
+    }
+
+    _drawWalker(x, y, scale) {
+        if (!this.walkerImage.complete || !this.walkerImage.naturalWidth) return;
+
+        const size = 110 * scale;
+        const ctx = this.ctx;
+        ctx.save();
+        ctx.translate(x, y - size);
+        ctx.scale(-1, 1);
+        ctx.drawImage(this.walkerImage, -size / 2, 0, size, size);
+        ctx.restore();
     }
     
     /**

@@ -231,8 +231,11 @@ async function initLocationManager() {
 
 async function loadInitialWeather() {
     // Priority: saved active location > geolocation > default
-    const saved = LocationManager.getActive();
-    if (saved) {
+    const saved = Storage.get(CONFIG.STORAGE_KEYS.ACTIVE_LOCATION, null);
+    const isDefaultLocation = saved &&
+        Math.abs(Number(saved.lat) - CONFIG.DEFAULT_LOCATION.lat) < 0.001 &&
+        Math.abs(Number(saved.lon) - CONFIG.DEFAULT_LOCATION.lon) < 0.001;
+    if (saved && !isDefaultLocation) {
         currentLocation = saved;
         Weather.loadFor(saved);
         return;
@@ -256,6 +259,15 @@ async function loadInitialWeather() {
         }
     }
 
+    // Use a previously saved location if GPS was unavailable, then the default.
+    const savedLocation = LocationManager.getActive();
+    if (savedLocation) {
+        currentLocation = savedLocation;
+        LocationManager.setActive(savedLocation);
+        Weather.loadFor(savedLocation);
+        return;
+    }
+
     // Default
     const fallback = { ...CONFIG.DEFAULT_LOCATION };
     currentLocation = fallback;
@@ -266,7 +278,7 @@ async function loadInitialWeather() {
 function getPosition(options = {}) {
     return new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: false,
+            enableHighAccuracy: true,
             timeout: options.timeout || 10000,
             maximumAge: 5 * 60 * 1000
         });

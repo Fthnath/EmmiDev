@@ -118,7 +118,11 @@ export async function reverseGeocode(lat, lon) {
     }
     const addr = data.address || {};
     return {
-        name: addr.city || addr.town || addr.village || addr.county || 'Unknown',
+        name: addr.hamlet || addr.village || addr.neighbourhood || addr.suburb ||
+            addr.town || addr.city || addr.municipality || addr.county || 'Unknown',
+        neighbourhood: addr.neighbourhood || addr.suburb || '',
+        division: addr.city_district || addr.municipality || '',
+        district: addr.state_district || addr.county || addr.district || '',
         country: (addr.country_code || '').toUpperCase(),
         countryName: addr.country || '',
         state: addr.state || '',

@@ -10,6 +10,12 @@ import { searchCities, reverseGeocode } from '../core/api.js';
 import { Toast } from '../ui/toast.js';
 import { Modal } from '../ui/modals.js';
 
+export function formatLocationLabel(loc) {
+    if (!loc) return '';
+    const parts = [loc.name, loc.neighbourhood, loc.division, loc.district, loc.state, loc.countryName || loc.country];
+    return [...new Map(parts.filter(Boolean).map(part => [String(part).toLowerCase(), part])).values()].join(', ');
+}
+
 class LocationManagerClass {
     constructor() {
         this._active = null;
@@ -88,6 +94,10 @@ class LocationManagerClass {
             id: this._makeId(loc),
             name: loc.name || 'Unknown',
             country: loc.country || '',
+            countryName: loc.countryName || '',
+            neighbourhood: loc.neighbourhood || '',
+            division: loc.division || '',
+            district: loc.district || '',
             state: loc.state || '',
             lat: loc.lat,
             lon: loc.lon,
@@ -110,6 +120,10 @@ class LocationManagerClass {
         const loc = {
             name: resolved.name || 'My Location',
             country: resolved.country || '',
+            countryName: resolved.countryName || '',
+            neighbourhood: resolved.neighbourhood || '',
+            division: resolved.division || '',
+            district: resolved.district || '',
             state: resolved.state || '',
             lat, lon
         };
@@ -322,7 +336,7 @@ class LocationManagerClass {
                         <i class="fas fa-map-marker-alt"></i>
                         <div>
                             <h4>${this._esc(loc.label || loc.name)}</h4>
-                            <p>${this._esc(loc.state ? loc.state + ', ' : '')}${this._esc(loc.country)}</p>
+                            <p>${this._esc(formatLocationLabel(loc))}</p>
                         </div>
                     </div>
                     <div class="location-card-actions">

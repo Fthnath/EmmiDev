@@ -12,7 +12,7 @@ import { formatTemp, formatWind, formatPercent, formatPressure, formatRain, wind
 import { formatTime, formatDay, formatShort } from '../utils/date.js';
 import { Toast } from '../ui/toast.js';
 import { i18n } from '../ui/i18n.js';
-import { LocationManager } from './locations.js';
+import { LocationManager, formatLocationLabel } from './locations.js';
 
 class WeatherModule {
     constructor() {
@@ -146,7 +146,9 @@ class WeatherModule {
         try {
             const pos = await new Promise((resolve, reject) =>
                 navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    timeout: 8000, maximumAge: 5 * 60 * 1000
+                    enableHighAccuracy: true,
+                    timeout: 12000,
+                    maximumAge: 5 * 60 * 1000
                 })
             );
             const loc = await LocationManager.addFromCoords(
@@ -271,7 +273,7 @@ class WeatherModule {
         if (el('heroDesc')) el('heroDesc').textContent = desc;
         if (el('heroLocationName')) {
             el('heroLocationName').textContent = loc
-                ? `${loc.name}${loc.country ? ', ' + loc.country : ''}`
+                ? formatLocationLabel(loc)
                 : 'Unknown';
         }
         if (el('heroFeelsLike')) {
@@ -301,7 +303,7 @@ class WeatherModule {
             <div class="current-weather-card">
                 <div class="current-weather-header">
                     <div>
-                        <h3>${this.esc(loc.name)}${loc.country ? ', ' + this.esc(loc.country) : ''}</h3>
+                        <h3>${this.esc(formatLocationLabel(loc))}</h3>
                         <p>${new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                     </div>
                     <div style="font-size:0.85rem;opacity:0.9;text-align:right">
