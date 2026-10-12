@@ -97,6 +97,7 @@ async function bootstrap() {
 
     // ---- 14. Load weather from saved or geolocation ----
     await loadInitialWeather();
+    setupWeatherAutoRefresh();
 
     // ---- 15. Self-tests in dev ----
     if (isDevEnvironment()) {
@@ -116,7 +117,6 @@ async function bootstrap() {
         router, Settings, LocationManager, Weather, AI,
         get weatherScene() { return weatherScene; }
     };
-    window.__setWeatherScene = (opts) => weatherScene?.setWeather(opts);
     window.__t = t;
 }
 
@@ -181,6 +181,7 @@ function initWeatherScene() {
     }
 
     weatherScene = new WeatherScene(canvas);
+    window.__setWeatherScene = (opts) => weatherScene?.setWeather(opts);
     weatherScene.setWeather({
         condition: 'clear',
         isDay: isDaytime(),
@@ -205,6 +206,31 @@ function initWeatherScene() {
         }, { threshold: 0.05 });
         io.observe(canvas);
     }
+}
+
+function setupWeatherAutoRefresh() {
+    const interval = 10 * 60 * 1000;
+    let lastRefresh = Date.now();
+    let refreshing = false;
+
+    const refresh = async (force = false) => {
+        if (navigator.onLine === false || document.hidden || !currentLocation || refreshing) return;
+        if (!force && Date.now() - lastRefresh < interval) return;
+
+        refreshing = true;
+        lastRefresh = Date.now();
+        try {
+            await Weather.loadFor(currentLocation, { refresh: true, quiet: true });
+        } finally {
+            refreshing = false;
+        }
+    };
+
+    window.addEventListener('online', () => refresh(true));
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) refresh();
+    });
+    window.setInterval(() => refresh(), interval);
 }
 
 function isDaytime() {

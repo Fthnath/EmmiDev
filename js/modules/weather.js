@@ -163,18 +163,18 @@ class WeatherModule {
         }
     }
 
-    async loadFor(location) {
+    async loadFor(location, { refresh = false, quiet = false } = {}) {
         if (!location) return;
         console.log('[Weather] Loading for', location.name);
 
         AppState.set('loading', true);
-        this.renderLoading();
+        if (!quiet) this.renderLoading();
 
         try {
             const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
             const [weather, aq] = await Promise.all([
-                fetchWeather(location.lat, location.lon, units),
-                fetchAirQuality(location.lat, location.lon).catch(() => null)
+                fetchWeather(location.lat, location.lon, units, { refresh }),
+                fetchAirQuality(location.lat, location.lon, { refresh }).catch(() => null)
             ]);
 
             this.data = weather;
@@ -198,8 +198,12 @@ class WeatherModule {
             Bus.emit(Events.WEATHER_LOADED, { weather, aq, location });
         } catch (err) {
             console.error('[Weather] Load error:', err);
-            Toast.error('Could not load weather data');
-            this.renderError(err.message);
+            if (quiet) {
+                console.warn('[Weather] Background refresh failed; keeping the last successful data.');
+            } else {
+                Toast.error('Could not load weather data');
+                this.renderError(err.message);
+            }
         } finally {
             AppState.set('loading', false);
         }
@@ -266,8 +270,8 @@ class WeatherModule {
 
     renderHero(cur, loc, tempUnit) {
         const temp = Math.round(cur.temperature_2m);
-        const cond = weatherCodeToCondition(cur.weather_code);
-        const desc = weatherCodeToDescription(cur.weather_code);
+        const cond = this.currentCondition(cur);
+        const desc = this.currentDescription(cur);
 
         const el = (id) => document.getElementById(id);
 
@@ -297,8 +301,8 @@ class WeatherModule {
         const card = document.getElementById('currentWeatherCard');
         if (!card) return;
 
-        const cond = weatherCodeToCondition(cur.weather_code);
-        const desc = weatherCodeToDescription(cur.weather_code);
+        const cond = this.currentCondition(cur);
+        const desc = this.currentDescription(cur);
         const icon = this.weatherIcon(cond, cur.is_day === 1);
         const today = data.daily;
 
@@ -566,7 +570,7 @@ class WeatherModule {
 
         const cur = data.current;
         const temp = cur.temperature_2m;
-        const cond = weatherCodeToCondition(cur.weather_code);
+        const cond = this.currentCondition(cur);
         const humidity = cur.relative_humidity_2m;
 
         const activity = this.activityAdvice(temp, cond);
@@ -782,13 +786,29 @@ class WeatherModule {
     updateScene(data, loc) {
         if (!window.__setWeatherScene) return;
         const cur = data.current;
-        const cond = weatherCodeToCondition(cur.weather_code);
+        const cond = this.currentCondition(cur);
         window.__setWeatherScene({
             condition: cond,
             isDay: cur.is_day === 1,
             temperature: cur.temperature_2m,
-            windSpeed: cur.wind_speed_10m || 0
+            windSpeed: cur.wind_speed_10m || 0,
+            weatherCode: cur.weather_code
         });
+    }
+
+    currentCondition(current) {
+        const hasObservedRain = [current.rain, current.precipitation]
+            .some(value => Number.isFinite(Number(value)) && Number(value) > 0);
+        return hasObservedRain ? 'rain' : weatherCodeToCondition(current.weather_code);
+    }
+
+    currentDescription(current) {
+        const codeCondition = weatherCodeToCondition(current.weather_code);
+        if (this.currentCondition(current) === 'rain' &&
+            !['rain', 'drizzle', 'thunderstorm'].includes(codeCondition)) {
+            return 'Rain';
+        }
+        return weatherCodeToDescription(current.weather_code);
     }
 
     // ============ HELPERS ============

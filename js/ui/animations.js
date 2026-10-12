@@ -25,6 +25,7 @@ export class WeatherScene {
         this.isDay = true;
         this.temperature = 20;
         this.windSpeed = 0;
+        this.weatherCode = null;
         this.intensity = 'moderate';
         
         this.frame = 0;
@@ -74,7 +75,7 @@ export class WeatherScene {
         this._rebuildScene();
     }
     
-    setWeather({ condition, isDay, temperature, windSpeed }) {
+    setWeather({ condition, isDay, temperature, windSpeed, weatherCode }) {
         const conditionChanged = this.condition !== condition;
         const dayChanged = this.isDay !== isDay;
         
@@ -82,6 +83,7 @@ export class WeatherScene {
         this.isDay = isDay !== false;
         if (temperature != null) this.temperature = temperature;
         if (windSpeed != null) this.windSpeed = windSpeed;
+        if (Number.isInteger(weatherCode)) this.weatherCode = weatherCode;
         
         if (conditionChanged || dayChanged) {
             this._rebuildScene();
@@ -284,9 +286,11 @@ export class WeatherScene {
         if (!this.isDay) this._drawStars();
         
         // 3. Sun or Moon
-        if (this.isDay && !['rain', 'drizzle', 'thunderstorm'].includes(this.condition)) {
+        const overcast = this.condition === 'clouds' && this.weatherCode === 3;
+        const obscured = overcast || ['rain', 'drizzle', 'thunderstorm', 'fog'].includes(this.condition);
+        if (this.isDay && !obscured) {
             this._drawSun();
-        } else if (!this.isDay) {
+        } else if (!this.isDay && !obscured) {
             this._drawMoon();
         }
         

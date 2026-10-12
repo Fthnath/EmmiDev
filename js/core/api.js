@@ -16,17 +16,17 @@ function isNetworkError(err) {
     return /network|failed to fetch|offline|load failed/i.test(String(err.message || err));
 }
 
-async function cachedFetch(url, cacheMs = 600000) {
+async function cachedFetch(url, cacheMs = 600000, { refresh = false } = {}) {
     const key = `cache::${url}`;
     const now = Date.now();
     const freshEntry = getCachedEntry(key, now);
-    if (freshEntry) return freshEntry.data;
+    if (!refresh && freshEntry) return freshEntry.data;
 
     if (pendingRequests.has(key)) return pendingRequests.get(key);
 
     const request = (async () => {
         try {
-            const res = await fetch(url);
+            const res = await fetch(url, refresh ? { cache: 'no-store' } : undefined);
             if (!res.ok) {
                 const cached = Storage.get(key) || memCache.get(key);
                 if (cached && cached.data) return cached.data;
@@ -131,7 +131,7 @@ export async function reverseGeocode(lat, lon) {
     };
 }
 
-export async function fetchWeather(lat, lon, units = 'metric') {
+export async function fetchWeather(lat, lon, units = 'metric', options = {}) {
     const coords = validateCoordinates(lat, lon);
     if (units !== 'metric' && units !== 'imperial') {
         throw new TypeError('Units must be "metric" or "imperial"');
@@ -150,17 +150,17 @@ export async function fetchWeather(lat, lon, units = 'metric') {
         precipitation_unit: precipUnit,
         forecast_days: 10
     }).toString();
-    return cachedFetch(url, CONFIG.CACHE.WEATHER);
+    return cachedFetch(url, CONFIG.CACHE.WEATHER, options);
 }
 
-export async function fetchAirQuality(lat, lon) {
+export async function fetchAirQuality(lat, lon, options = {}) {
     const coords = validateCoordinates(lat, lon);
     const url = `${CONFIG.OPEN_METEO_AQ}/air-quality?` + new URLSearchParams({
         latitude: coords.lat, longitude: coords.lon,
         current: ['european_aqi','us_aqi','pm10','pm2_5','carbon_monoxide','nitrogen_dioxide','sulphur_dioxide','ozone','alder_pollen','birch_pollen','grass_pollen','mugwort_pollen','olive_pollen','ragweed_pollen','dust','uv_index'].join(','),
         timezone: 'auto'
     }).toString();
-    return cachedFetch(url, CONFIG.CACHE.WEATHER);
+    return cachedFetch(url, CONFIG.CACHE.WEATHER, options);
 }
 
 export async function fetchHistorical(lat, lon, startDate, endDate, units = 'metric') {
