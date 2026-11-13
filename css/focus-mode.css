@@ -1,0 +1,83 @@
+/* ============================================================
+   EmmiDev Weather — Focus Mode
+   Strips UI to essential weather only (big temp + advice)
+   ============================================================ */
+
+body.focus-mode .app-header,
+body.focus-mode .app-footer,
+body.focus-mode .bottom-nav,
+body.focus-mode .home-overview-header,
+body.focus-mode .home-hourly-panel,
+body.focus-mode .home-daily-panel,
+body.focus-mode .home-nowcast-panel,
+body.focus-mode .home-current-panel,
+body.focus-mode .home-weather-board,
+body.focus-mode #rightNowStrip,
+body.focus-mode #severeAlertBanner,
+body.focus-mode .section:not(:first-of-type),
+body.focus-mode .home-overview > *:not(.home-overview-header) {
+    display: none !important;
+}
+
+body.focus-mode .hero-content > .hero-location,
+body.focus-mode .hero-content > .hero-meta,
+body.focus-mode .hero-content > .hero-actions,
+body.focus-mode .hero-content > .hero-search,
+body.focus-mode .hero-content > .hero-deltas,
+body.focus-mode .hero-geo-btn {
+    display: none !important;
+}
+
+body.focus-mode main,
+body.focus-mode .view-active {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+body.focus-mode .hero-canvas-wrap {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+body.focus-mode .hero-content {
+    text-align: center;
+    padding: 40px 24px;
+    gap: 12px;
+}
+
+body.focus-mode .hero-temp-wrap { justify-content: center; }
+
+body.focus-mode .hero-temp {
+    font-size: clamp(4rem, 14vw, 9rem);
+    font-weight: 800;
+    line-height: 1;
+}
+
+body.focus-mode .hero-desc {
+    font-size: 1.4rem;
+    margin-top: 8px;
+}
+
+body.focus-mode .hero-advice {
+    margin-top: 24px;
+    font-size: 1.05rem;
+}
+
+body.focus-mode::after {
+    content: "Press F or tap the focus button to exit";
+    position: fixed;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.55);
+    background: rgba(0, 0, 0, 0.35);
+    padding: 6px 12px;
+    border-radius: var(--radius-pill);
+    pointer-events: none;
+    z-index: 9999;
+}

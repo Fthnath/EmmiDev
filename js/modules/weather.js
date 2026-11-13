@@ -13,6 +13,7 @@ import { formatTime, formatDay, formatShort } from '../utils/date.js';
 import { Toast } from '../ui/toast.js';
 import { i18n } from '../ui/i18n.js';
 import { LocationManager, formatLocationLabel } from './locations.js';
+import { ShareCard } from './share-card.js';   // NEW
 
 const FARM_CROPS = {
     maize: { name: 'Maize', minTemp: 18, maxTemp: 32, plantingMonths: [2, 3, 7, 8], guidance: 'Avoid waterlogged soil; check moisture before sowing.' },
@@ -32,6 +33,7 @@ class WeatherModule {
         this.historyRequestId = 0;
         this.hourlyFeelsLike = false;
         this.forecastFeelsLike = false;
+        this.showMeteogram = false;   // NEW
     }
 
     init() {
@@ -53,6 +55,7 @@ class WeatherModule {
             geoBtn.addEventListener('click', () => this.useMyLocation());
         }
 
+        // Hourly feels-like toggle
         document.getElementById('hourlyFeelsLikeToggle')?.addEventListener('click', (event) => {
             this.hourlyFeelsLike = !this.hourlyFeelsLike;
             event.currentTarget.setAttribute('aria-pressed', String(this.hourlyFeelsLike));
@@ -62,6 +65,7 @@ class WeatherModule {
             }
         });
 
+        // Forecast feels-like toggle
         document.getElementById('forecastFeelsLikeToggle')?.addEventListener('click', (event) => {
             this.forecastFeelsLike = !this.forecastFeelsLike;
             event.currentTarget.setAttribute('aria-pressed', String(this.forecastFeelsLike));
@@ -70,8 +74,30 @@ class WeatherModule {
             }
         });
 
+        // NEW: Meteogram toggle
+        document.getElementById('meteogramToggle')?.addEventListener('click', (event) => {
+            this.showMeteogram = !this.showMeteogram;
+            event.currentTarget.setAttribute('aria-pressed', String(this.showMeteogram));
+            const tempWrapper = document.getElementById('tempChart')?.closest('.chart-container');
+            const meteoWrapper = document.getElementById('meteogramContainer');
+            if (tempWrapper) tempWrapper.hidden = this.showMeteogram;
+            if (meteoWrapper) meteoWrapper.hidden = !this.showMeteogram;
+            if (this.showMeteogram && this.data) {
+                this.renderMeteogram(this.data, Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric') === 'imperial' ? 'F' : 'C');
+            }
+        });
+
+        // NEW: Share button in current weather card (delegated — rendered dynamically)
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#shareCardBtn')) {
+                e.preventDefault();
+                ShareCard.share();
+            }
+        });
+
         window.setInterval(() => this.updateNowcastMessage(), 60 * 1000);
 
+        // Crop selector
         const cropSelect = document.getElementById('farmCropSelect');
         if (cropSelect) {
             cropSelect.value = this.selectedCrop();
@@ -99,16 +125,13 @@ class WeatherModule {
 
     wireSearch(input, suggestBox) {
         let debounceTimer;
-
         input.addEventListener('input', () => {
             clearTimeout(debounceTimer);
             const q = input.value.trim();
-
             if (q.length < 2) {
                 this.showRecentSuggestions(suggestBox);
                 return;
             }
-
             debounceTimer = setTimeout(async () => {
                 const cities = await LocationManager.search(q);
                 this.renderSuggestions(suggestBox, cities);
@@ -252,6 +275,10 @@ class WeatherModule {
             this.updateScene(weather, location);
             this.renderLifestyle(weather);
             this.renderFarming(weather);
+            this.renderHeroAdvice(weather);        // NEW
+            this.renderHeroDeltas(weather);        // NEW
+            this.renderRightNowStrip(weather, aq); // NEW
+            this.checkSevereAlerts(weather);       // NEW
 
             // Persist last location
             Storage.set(CONFIG.STORAGE_KEYS.ACTIVE_LOCATION, location);
@@ -315,19 +342,14 @@ class WeatherModule {
         const daily = data.daily;
         const loc = this.location || LocationManager.getActive();
 
-        // Hero
         this.renderHero(cur, loc, tempUnit);
         this.renderNowcast(this.nowcast, units);
-        // Current card
         this.renderCurrentCard(cur, data, loc, tempUnit, units);
-        // Hourly
         this.renderHourly(data.hourly, tempUnit, daily);
-        // Daily
         this.renderDaily(daily, tempUnit);
-        // Full forecast view
         this.renderForecastFull(daily, tempUnit);
-        // Charts
         this.renderCharts(data, tempUnit);
+        this.renderWindRose(data, tempUnit);   // NEW
     }
 
     renderHero(cur, loc, tempUnit) {
@@ -356,6 +378,273 @@ class WeatherModule {
         }
         if (el('heroUpdated')) {
             el('heroUpdated').textContent = 'Just now';
+        }
+        // NEW: Pressure
+        if (el('heroPressure')) {
+            const p = Number(cur.pressure_msl);
+            el('heroPressure').textContent = Number.isFinite(p) ? `${Math.round(p)} hPa` : '-- hPa';
+        }
+        // NEW: Visibility
+        if (el('heroVisibility')) {
+            const v = Number(cur.visibility);
+            const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
+            if (Number.isFinite(v)) {
+                el('heroVisibility').textContent = units === 'imperial'
+                    ? `${(v / 1609.344).toFixed(1)} mi`
+                    : `${(v / 1000).toFixed(1)} km`;
+            } else {
+                el('heroVisibility').textContent = '-- km';
+            }
+        }
+    }
+
+    /* ============================================================
+       NEW: HERO ADVICE (one-line actionable tip)
+       ============================================================ */
+    renderHeroAdvice(data) {
+        const el = document.getElementById('heroAdviceText');
+        if (!el) return;
+
+        const cur = data.current;
+        const temp = Number(cur.temperature_2m);
+        const cond = this.currentCondition(cur);
+        const uv = Number(data.daily?.uv_index_max?.[0]);
+        const precipProb = Number(data.hourly?.precipitation_probability?.[0]) || 0;
+
+        let advice = '';
+        if (cond === 'thunderstorm') {
+            advice = 'Thunderstorm outside — stay indoors if you can';
+        } else if (cond === 'rain' || cond === 'drizzle') {
+            advice = 'Grab an umbrella before heading out';
+        } else if (cond === 'snow') {
+            advice = 'Snow expected — bundle up and drive carefully';
+        } else if (cond === 'fog') {
+            advice = 'Low visibility — drive carefully';
+        } else if (precipProb >= 60) {
+            advice = `Rain likely soon (${precipProb}%) — carry an umbrella`;
+        } else if (temp >= 33) {
+            advice = 'Very hot outside — drink water and avoid midday sun';
+        } else if (temp >= 28) {
+            advice = 'Warm day — stay hydrated and use sunscreen';
+        } else if (temp <= 5) {
+            advice = 'Bundle up — cold weather outside';
+        } else if (uv >= 8) {
+            advice = 'Very high UV — sunscreen, hat, and shade recommended';
+        } else if (uv >= 6) {
+            advice = 'High UV — use sun protection outdoors';
+        } else if (temp >= 18 && temp <= 26 && cond === 'clear') {
+            advice = 'Perfect weather — great day to be outside';
+        } else {
+            advice = 'Comfortable conditions — enjoy your day';
+        }
+
+        el.textContent = advice;
+    }
+
+    /* ============================================================
+       NEW: HERO DELTAS (trend + feels-like comparison)
+       ============================================================ */
+    renderHeroDeltas(data) {
+        const trendEl = document.getElementById('heroTrendDelta');
+        const feelsEl = document.getElementById('heroFeelsDelta');
+        const hourly = data.hourly;
+        const cur = data.current;
+        const tempUnit = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric') === 'imperial' ? 'F' : 'C';
+
+        // Trend: compare now vs 1 hour ago
+        if (trendEl && hourly?.time) {
+            const now = new Date();
+            const idx = hourly.time.findIndex(t => new Date(t) >= now);
+            const prevIdx = Math.max(0, idx - 1);
+            const nowTemp = Number(hourly.temperature_2m?.[idx]);
+            const prevTemp = Number(hourly.temperature_2m?.[prevIdx]);
+
+            if (Number.isFinite(nowTemp) && Number.isFinite(prevTemp)) {
+                const delta = nowTemp - prevTemp;
+                const absDelta = Math.abs(delta);
+                const arrow = trendEl.querySelector('i');
+                const span = trendEl.querySelector('span');
+
+                if (absDelta < 0.5) {
+                    arrow.className = 'fas fa-minus';
+                    trendEl.classList.remove('is-up', 'is-down');
+                    span.textContent = 'Steady';
+                } else if (delta > 0) {
+                    arrow.className = 'fas fa-arrow-up';
+                    trendEl.classList.add('is-up');
+                    trendEl.classList.remove('is-down');
+                    span.textContent = `+${absDelta.toFixed(1)}° in 1h`;
+                } else {
+                    arrow.className = 'fas fa-arrow-down';
+                    trendEl.classList.add('is-down');
+                    trendEl.classList.remove('is-up');
+                    span.textContent = `-${absDelta.toFixed(1)}° in 1h`;
+                }
+            }
+        }
+
+        // Feels-like vs actual
+        if (feelsEl) {
+            const actual = Number(cur.temperature_2m);
+            const feels = Number(cur.apparent_temperature);
+            if (Number.isFinite(actual) && Number.isFinite(feels)) {
+                const diff = feels - actual;
+                const absDiff = Math.abs(diff);
+                const arrow = feelsEl.querySelector('i');
+                const span = feelsEl.querySelector('span');
+
+                if (absDiff < 1) {
+                    arrow.className = 'fas fa-equals';
+                    feelsEl.classList.remove('is-up', 'is-down');
+                    span.textContent = 'Matches';
+                } else if (diff > 0) {
+                    arrow.className = 'fas fa-temperature-high';
+                    feelsEl.classList.add('is-up');
+                    feelsEl.classList.remove('is-down');
+                    span.textContent = `Feels ${absDiff.toFixed(0)}° warmer`;
+                } else {
+                    arrow.className = 'fas fa-temperature-low';
+                    feelsEl.classList.add('is-down');
+                    feelsEl.classList.remove('is-up');
+                    span.textContent = `Feels ${absDiff.toFixed(0)}° cooler`;
+                }
+            }
+        }
+    }
+
+    /* ============================================================
+       NEW: RIGHT NOW STRIP (5 glanceable items)
+       ============================================================ */
+    renderRightNowStrip(data, aq) {
+        const set = (id, text) => {
+            const el = document.getElementById(id);
+            if (el) el.textContent = text;
+        };
+
+        const cur = data.current;
+        const temp = Number(cur.temperature_2m);
+        const cond = this.currentCondition(cur);
+        const uv = Number(data.daily?.uv_index_max?.[0]);
+        const precipProb = Number(data.hourly?.precipitation_probability?.[0]) || 0;
+
+        // Trend
+        if (cond === 'rain' || cond === 'thunderstorm') set('rightNowTrend', 'Rainy');
+        else if (temp >= 30) set('rightNowTrend', 'Hot');
+        else if (temp <= 10) set('rightNowTrend', 'Cold');
+        else set('rightNowTrend', 'Mild');
+
+        // Outdoor
+        if (cond === 'thunderstorm') set('rightNowOutdoor', 'Stay in');
+        else if (cond === 'rain') set('rightNowOutdoor', 'Rainy');
+        else if (temp >= 33 || uv >= 8) set('rightNowOutdoor', 'Limit');
+        else if (temp >= 18 && temp <= 26) set('rightNowOutdoor', 'Great');
+        else set('rightNowOutdoor', 'Okay');
+
+        // Rain
+        if (cond === 'rain') set('rightNowRain', 'Now');
+        else if (precipProb >= 60) set('rightNowRain', `${precipProb}%`);
+        else if (precipProb >= 30) set('rightNowRain', `${precipProb}%`);
+        else set('rightNowRain', 'Dry');
+
+        // UV
+        if (!Number.isFinite(uv)) set('rightNowUV', '—');
+        else if (uv >= 8) set('rightNowUV', 'Extreme');
+        else if (uv >= 6) set('rightNowUV', 'High');
+        else if (uv >= 3) set('rightNowUV', 'Moderate');
+        else set('rightNowUV', 'Low');
+
+        // Sleep (tonight's comfort)
+        const hourly = data.hourly;
+        if (hourly?.time) {
+            const tonight = new Date();
+            tonight.setHours(22, 0, 0, 0);
+            if (tonight < new Date()) tonight.setDate(tonight.getDate() + 1);
+
+            const nightTemps = [];
+            hourly.time.forEach((t, idx) => {
+                const d = new Date(t);
+                if (d >= tonight && d < new Date(tonight.getTime() + 8 * 60 * 60 * 1000)) {
+                    const val = Number(hourly.apparent_temperature?.[idx]);
+                    if (Number.isFinite(val)) nightTemps.push(val);
+                }
+            });
+
+            if (nightTemps.length > 0) {
+                const avg = nightTemps.reduce((s, v) => s + v, 0) / nightTemps.length;
+                if (avg >= 16 && avg <= 21) set('rightNowSleep', 'Ideal');
+                else if (avg > 26) set('rightNowSleep', 'Too warm');
+                else if (avg > 21) set('rightNowSleep', 'Warm');
+                else if (avg < 14) set('rightNowSleep', 'Cold');
+                else set('rightNowSleep', 'Fair');
+            } else {
+                set('rightNowSleep', '—');
+            }
+        }
+    }
+
+    /* ============================================================
+       NEW: SEVERE WEATHER ALERTS
+       ============================================================ */
+    checkSevereAlerts(data) {
+        const banner = document.getElementById('severeAlertBanner');
+        if (!banner) return;
+
+        const cur = data.current;
+        const daily = data.daily;
+        const cond = this.currentCondition(cur);
+        const windKmh = Number(cur.wind_speed_10m) || 0;
+        const gustKmh = Number(cur.wind_gusts_10m) || 0;
+
+        // Check for severe conditions
+        let alert = null;
+
+        if (cond === 'thunderstorm') {
+            alert = {
+                title: '⛈️ Thunderstorm Alert',
+                message: 'Thunderstorms in your area. Avoid open spaces and unplug sensitive electronics.'
+            };
+        } else if (gustKmh >= 80) {
+            alert = {
+                title: '💨 High Wind Warning',
+                message: `Wind gusts up to ${Math.round(gustKmh)} km/h. Secure loose items outdoors.`
+            };
+        } else if (daily?.precipitation_sum?.[0] >= 50) {
+            alert = {
+                title: '🌧️ Heavy Rain Alert',
+                message: `Heavy rainfall expected today (${Math.round(daily.precipitation_sum[0])} mm). Watch for flooding.`
+            };
+        } else if (Number(cur.visibility) < 200) {
+            alert = {
+                title: '🌫️ Low Visibility',
+                message: 'Visibility below 200m. Drive carefully and use fog lights.'
+            };
+        } else if (Number(cur.temperature_2m) >= 40) {
+            alert = {
+                title: '🔥 Extreme Heat Warning',
+                message: 'Temperatures above 40°C. Stay indoors, drink water, and check on elderly neighbors.'
+            };
+        } else if (Number(cur.temperature_2m) <= -5) {
+            alert = {
+                title: '❄️ Extreme Cold Warning',
+                message: 'Temperatures below -5°C. Bundle up and limit time outdoors.'
+            };
+        }
+
+        if (alert) {
+            document.getElementById('severeAlertTitle').textContent = alert.title;
+            document.getElementById('severeAlertMessage').textContent = alert.message;
+            banner.hidden = false;
+
+            // Dismiss handler (only once)
+            const dismiss = document.getElementById('severeAlertDismiss');
+            if (dismiss && !dismiss._wired) {
+                dismiss._wired = true;
+                dismiss.addEventListener('click', () => {
+                    banner.hidden = true;
+                });
+            }
+        } else {
+            banner.hidden = true;
         }
     }
 
@@ -489,6 +778,7 @@ class WeatherModule {
         const icon = this.weatherIcon(cond, cur.is_day === 1);
         const today = data.daily;
 
+        // FIXED: proper template with share button inline (not pasted snippet)
         card.innerHTML = `
             <div class="current-weather-card">
                 <div class="current-weather-header">
@@ -496,6 +786,9 @@ class WeatherModule {
                         <h3>${this.esc(formatLocationLabel(loc))}</h3>
                         <p>${new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                     </div>
+                    <button class="current-weather-share-btn" id="shareCardBtn" type="button" title="Share this weather" aria-label="Share this weather">
+                        <i class="fas fa-share-nodes"></i>
+                    </button>
                     <div style="font-size:0.85rem;opacity:0.9;text-align:right">
                         <div><i class="fas fa-arrow-up"></i> ${Math.round(today.temperature_2m_max[0])}°${tempUnit}</div>
                         <div><i class="fas fa-arrow-down"></i> ${Math.round(today.temperature_2m_min[0])}°${tempUnit}</div>
@@ -579,7 +872,6 @@ class WeatherModule {
         const container = document.getElementById('hourlyForecast');
         if (!container) return;
 
-        // Next 24 hours
         const now = new Date();
         const foundStartIdx = hourly.time.findIndex(t =>
             this.parseForecastTimestamp(t) >= now.getTime()
@@ -841,7 +1133,7 @@ class WeatherModule {
             });
         }
 
-        // Humidity chart (hourly 24h)
+        // Humidity chart
         const humCtx = document.getElementById('humidityChart');
         if (humCtx) {
             if (this._humChart) this._humChart.destroy();
@@ -874,11 +1166,154 @@ class WeatherModule {
         }
     }
 
+    /* ============================================================
+       NEW: METEOGRAM (combined temp + rain + wind)
+       ============================================================ */
+    renderMeteogram(data, tempUnit) {
+        const canvas = document.getElementById('meteogramChart');
+        if (!canvas || !window.Chart) return;
+
+        if (this._meteogramChart) this._meteogramChart.destroy();
+
+        const daily = data.daily;
+        const labels = daily.time.map(t => formatShort(t));
+        const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
+
+        this._meteogramChart = new Chart(canvas, {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        type: 'line',
+                        label: `High (°${tempUnit})`,
+                        data: daily.temperature_2m_max,
+                        borderColor: '#ff6b01',
+                        backgroundColor: 'rgba(255,107,1,0.1)',
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        yAxisID: 'temp'
+                    },
+                    {
+                        type: 'line',
+                        label: `Low (°${tempUnit})`,
+                        data: daily.temperature_2m_min,
+                        borderColor: '#4a9eff',
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        yAxisID: 'temp'
+                    },
+                    {
+                        type: 'bar',
+                        label: `Rain (${units === 'imperial' ? 'in' : 'mm'})`,
+                        data: daily.precipitation_sum,
+                        backgroundColor: 'rgba(26, 115, 232, 0.45)',
+                        borderColor: '#1a73e8',
+                        borderWidth: 1,
+                        borderRadius: 4,
+                        yAxisID: 'rain'
+                    },
+                    {
+                        type: 'line',
+                        label: `Wind max (${units === 'imperial' ? 'mph' : 'km/h'})`,
+                        data: daily.wind_speed_10m_max,
+                        borderColor: '#a855f7',
+                        borderDash: [4, 4],
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 2,
+                        yAxisID: 'wind'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'bottom' } },
+                scales: {
+                    temp: { type: 'linear', position: 'left', title: { display: true, text: `Temp (°${tempUnit})` } },
+                    rain: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Rain' } },
+                    wind: { type: 'linear', position: 'right', beginAtZero: true, grid: { drawOnChartArea: false }, title: { display: true, text: 'Wind' }, display: false }
+                }
+            }
+        });
+    }
+
+    /* ============================================================
+       NEW: WIND ROSE
+       ============================================================ */
+    renderWindRose(data, tempUnit) {
+        const canvas = document.getElementById('windRoseChart');
+        if (!canvas || !window.Chart) return;
+
+        if (this._windRoseChart) this._windRoseChart.destroy();
+
+        // Aggregate wind by 8 compass directions
+        const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+        const sums = [0, 0, 0, 0, 0, 0, 0, 0];
+        const counts = [0, 0, 0, 0, 0, 0, 0, 0];
+        const daily = data.daily;
+
+        if (daily?.wind_direction_10m_dominant && daily?.wind_speed_10m_max) {
+            for (let i = 0; i < daily.time.length; i++) {
+                const dir = Number(daily.wind_direction_10m_dominant[i]);
+                const speed = Number(daily.wind_speed_10m_max[i]);
+                if (!Number.isFinite(dir) || !Number.isFinite(speed)) continue;
+                const idx = Math.round(dir / 45) % 8;
+                sums[idx] += speed;
+                counts[idx] += 1;
+            }
+        }
+
+        const avg = sums.map((s, i) => counts[i] ? s / counts[i] : 0);
+
+        this._windRoseChart = new Chart(canvas, {
+            type: 'polarArea',
+            data: {
+                labels: dirs,
+                datasets: [{
+                    label: 'Avg max wind',
+                    data: avg,
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.5)',
+                        'rgba(249, 115, 22, 0.5)',
+                        'rgba(234, 179, 8, 0.5)',
+                        'rgba(34, 197, 94, 0.5)',
+                        'rgba(6, 182, 212, 0.5)',
+                        'rgba(59, 130, 246, 0.5)',
+                        'rgba(139, 92, 246, 0.5)',
+                        'rgba(236, 72, 153, 0.5)'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        ticks: { display: false }
+                    }
+                }
+            }
+        });
+    }
+
     resizeCharts() {
         this._tempChart?.resize();
         this._precipitationChart?.resize();
         this._humChart?.resize();
         this._climateChart?.resize();
+        this._meteogramChart?.resize();
+        this._windRoseChart?.resize();
     }
 
     renderLifestyle(data) {
@@ -888,7 +1323,6 @@ class WeatherModule {
         const cur = data.current;
         const temp = cur.temperature_2m;
         const cond = this.currentCondition(cur);
-        const humidity = cur.relative_humidity_2m;
 
         const activity = this.activityAdvice(temp, cond);
         const clothing = this.clothingAdvice(temp, cond);
@@ -1066,10 +1500,6 @@ class WeatherModule {
         `;
     }
 
-    renderQuickHealth(data, aq) {
-        this.renderHealth(data, aq);
-    }
-
     riskCard(title, icon, risk) {
         return `
             <div class="health-card">
@@ -1167,6 +1597,9 @@ class WeatherModule {
             const result = await fetchHistorical(location.lat, location.lon, startDate, endDate, units, { refresh });
             if (requestId !== this.historyRequestId) return;
             this.renderHistory(result, location, startDate, endDate, units);
+            this.renderOnThisDay(result, units);       // NEW
+            this.renderExtremeRecords(result, units);  // NEW
+            this.renderMonthlyAverages(result, units); // NEW
         } catch (err) {
             if (requestId !== this.historyRequestId) return;
             if (status) status.textContent = `Historical data is unavailable: ${err.message}`;
@@ -1244,6 +1677,158 @@ class WeatherModule {
                 }
             }
         });
+    }
+
+    /* ============================================================
+       NEW: ON THIS DAY
+       ============================================================ */
+    renderOnThisDay(result, units = 'metric') {
+        const container = document.getElementById('onThisDayCard');
+        if (!container || !result?.daily?.time?.length) return;
+
+        const today = new Date();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const targetPattern = `-${month}-${day}`;
+
+        // Find matching day in historical data
+        const idx = result.daily.time.findIndex(t => t.endsWith(targetPattern));
+        if (idx < 0) {
+            container.innerHTML = `<p class="section-note">No historical record for today's date.</p>`;
+            return;
+        }
+
+        const unit = units === 'imperial' ? '°F' : '°C';
+        const histHigh = Number(result.daily.temperature_2m_max?.[idx]);
+        const histLow = Number(result.daily.temperature_2m_min?.[idx]);
+        const histRain = Number(result.daily.precipitation_sum?.[idx]) || 0;
+        const dateStr = result.daily.time[idx];
+
+        const current = this.data?.daily;
+        const todayHigh = Number(current?.temperature_2m_max?.[0]);
+        const todayLow = Number(current?.temperature_2m_min?.[0]);
+
+        const deltaHigh = Number.isFinite(todayHigh) && Number.isFinite(histHigh)
+            ? (todayHigh - histHigh).toFixed(1) : null;
+
+        container.innerHTML = `
+            <div class="on-this-day-side">
+                <span class="label">${dateStr}</span>
+                <div class="temp">${Number.isFinite(histHigh) ? `${Math.round(histHigh)}°` : '—'}</div>
+                <p class="section-note">Last year high</p>
+                <p class="section-note">Low ${Number.isFinite(histLow) ? `${Math.round(histLow)}°` : '—'} · Rain ${histRain.toFixed(1)} mm</p>
+            </div>
+            <div class="on-this-day-arrow">
+                ${deltaHigh != null ? `<i class="fas fa-arrow-${deltaHigh >= 0 ? 'up' : 'down'}"></i>` : '<i class="fas fa-equals"></i>'}
+            </div>
+            <div class="on-this-day-side">
+                <span class="label">Today</span>
+                <div class="temp">${Number.isFinite(todayHigh) ? `${Math.round(todayHigh)}°` : '—'}</div>
+                <p class="section-note">Current forecast high</p>
+                ${deltaHigh != null ? `<p class="section-note" style="color:${deltaHigh >= 0 ? '#dc2626' : '#2563eb'};font-weight:600">
+                    ${deltaHigh >= 0 ? '+' : ''}${deltaHigh}°${unit} vs last year
+                </p>` : ''}
+            </div>
+        `;
+    }
+
+    /* ============================================================
+       NEW: EXTREME RECORDS
+       ============================================================ */
+    renderExtremeRecords(result, units = 'metric') {
+        const container = document.getElementById('extremeRecords');
+        if (!container || !result?.daily?.time?.length) return;
+
+        const unit = units === 'imperial' ? '°F' : '°C';
+        const highs = result.daily.temperature_2m_max || [];
+        const lows = result.daily.temperature_2m_min || [];
+        const rains = result.daily.precipitation_sum || [];
+
+        let hottest = { temp: -Infinity, date: null };
+        let coldest = { temp: Infinity, date: null };
+        let wettest = { rain: -Infinity, date: null };
+
+        for (let i = 0; i < result.daily.time.length; i++) {
+            const h = Number(highs[i]);
+            const l = Number(lows[i]);
+            const r = Number(rains[i]);
+            if (Number.isFinite(h) && h > hottest.temp) hottest = { temp: h, date: result.daily.time[i] };
+            if (Number.isFinite(l) && l < coldest.temp) coldest = { temp: l, date: result.daily.time[i] };
+            if (Number.isFinite(r) && r > wettest.rain) wettest = { rain: r, date: result.daily.time[i] };
+        }
+
+        const card = (icon, label, value, date, color) => `
+            <article class="health-card">
+                <div class="health-icon" style="color:${color}"><i class="fas ${icon}"></i></div>
+                <h3 class="health-title">${label}</h3>
+                <div style="font-size:1.5rem;font-weight:800;color:${color};margin:8px 0">${value}</div>
+                <p class="section-note">${date || '—'}</p>
+            </article>
+        `;
+
+        container.innerHTML = [
+            card('fa-temperature-high', 'Hottest day',
+                Number.isFinite(hottest.temp) ? `${Math.round(hottest.temp)}${unit}` : '—',
+                hottest.date, '#dc2626'),
+            card('fa-temperature-low', 'Coldest day',
+                Number.isFinite(coldest.temp) ? `${Math.round(coldest.temp)}${unit}` : '—',
+                coldest.date, '#2563eb'),
+            card('fa-cloud-showers-heavy', 'Wettest day',
+                Number.isFinite(wettest.rain) ? `${wettest.rain.toFixed(1)} mm` : '—',
+                wettest.date, '#0891b2')
+        ].join('');
+    }
+
+    /* ============================================================
+       NEW: MONTHLY AVERAGES TABLE
+       ============================================================ */
+    renderMonthlyAverages(result, units = 'metric') {
+        const container = document.getElementById('monthlyAveragesTable');
+        if (!container || !result?.daily?.time?.length) return;
+
+        const unit = units === 'imperial' ? '°F' : '°C';
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const buckets = months.map(() => ({ temps: [], rains: 0, days: 0 }));
+
+        for (let i = 0; i < result.daily.time.length; i++) {
+            const d = new Date(result.daily.time[i]);
+            const m = d.getMonth();
+            const tmax = Number(result.daily.temperature_2m_max?.[i]);
+            const tmin = Number(result.daily.temperature_2m_min?.[i]);
+            const rain = Number(result.daily.precipitation_sum?.[i]) || 0;
+
+            if (Number.isFinite(tmax) && Number.isFinite(tmin)) {
+                buckets[m].temps.push((tmax + tmin) / 2);
+            }
+            buckets[m].rains += rain;
+            buckets[m].days += 1;
+        }
+
+        const rows = months.map((m, i) => {
+            const b = buckets[i];
+            if (b.days === 0) return '';
+            const avgTemp = b.temps.length ? b.temps.reduce((s, v) => s + v, 0) / b.temps.length : null;
+            return `<tr>
+                <td>${m}</td>
+                <td>${avgTemp != null ? avgTemp.toFixed(1) + unit : '—'}</td>
+                <td>${b.rains.toFixed(1)} mm</td>
+                <td>${b.days}</td>
+            </tr>`;
+        }).join('');
+
+        container.innerHTML = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th>Avg Temp</th>
+                        <th>Total Rain</th>
+                        <th>Days</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        `;
     }
 
     // ============ SCENE ============

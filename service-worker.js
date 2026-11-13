@@ -64,6 +64,14 @@ const APP_SHELL = [
     './js/utils/date.js',
     './js/utils/format.js',
     './lang/en.json'
+    './js/modules/health.js',
+    './js/modules/farming.js',
+    './js/modules/rain-animation.js',
+    './css/focus-mode.css',
+    './css/oled.css',
+    './css/new-components.css',
+    './css/rain-animation.css',
+    './css/map-tracking.css'
 ];
 
 self.addEventListener('install', (e) => {

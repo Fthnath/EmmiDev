@@ -14,16 +14,25 @@
 
     <!-- Locally hosted icons and libraries -->
     <link rel="stylesheet" href="vendor/fontawesome/css/all.min.css">
-
-    <!-- Maps -->
     <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 
-    <!-- Our Modular CSS -->
+    <!-- Core CSS -->
     <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
     <link rel="stylesheet" href="css/hero.css">
     <link rel="stylesheet" href="css/weather.css">
     <link rel="stylesheet" href="map.css">
     <link rel="stylesheet" href="css/pwa.css">
+
+    <!-- NEW: Extended CSS -->
+    <link rel="stylesheet" href="css/focus-mode.css">
+    <link rel="stylesheet" href="css/oled.css">
+    <link rel="stylesheet" href="css/new-components.css">
+    <link rel="stylesheet" href="css/rain-animation.css">
+    <link rel="stylesheet" href="css/map-tracking.css">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="weather-icon.svg">
@@ -33,12 +42,18 @@
 </head>
 <body>
 
+    <!-- Accessibility: Skip link -->
+    <a href="#mainContent" class="skip-link">Skip to main content</a>
+
     <!-- ============================================
          HERO — Live Weather Overview
          ============================================ -->
     <div class="hero-canvas-wrap">
         <canvas id="heroWeatherCanvas" class="hero-canvas" aria-hidden="true"></canvas>
         <div class="hero-overlay"></div>
+
+        <!-- NEW: Rain animation overlay (particles drawn by JS) -->
+        <div id="rainAnimationOverlay" class="rain-animation-overlay" aria-hidden="true"></div>
 
         <div class="hero-content">
             <div class="hero-location">
@@ -52,6 +67,24 @@
             </div>
 
             <div class="hero-desc" id="heroDesc">Loading weather...</div>
+
+            <!-- NEW: One-line actionable advice -->
+            <div class="hero-advice" id="heroAdvice" role="status" aria-live="polite">
+                <i class="fas fa-lightbulb" aria-hidden="true"></i>
+                <span id="heroAdviceText">Loading advice…</span>
+            </div>
+
+            <!-- NEW: Trend + feels-like delta badges -->
+            <div class="hero-deltas" id="heroDeltas">
+                <span class="hero-delta" id="heroTrendDelta" title="Change in the last hour">
+                    <i class="fas fa-arrow-up" aria-hidden="true"></i>
+                    <span>--</span>
+                </span>
+                <span class="hero-delta" id="heroFeelsDelta" title="Feels-like vs actual">
+                    <i class="fas fa-temperature-half" aria-hidden="true"></i>
+                    <span>--</span>
+                </span>
+            </div>
 
             <div class="hero-meta">
                 <div class="hero-meta-item">
@@ -82,6 +115,22 @@
                         <strong id="heroUpdated">--</strong>
                     </div>
                 </div>
+                <!-- NEW: Pressure -->
+                <div class="hero-meta-item">
+                    <i class="fas fa-compress-alt" aria-hidden="true"></i>
+                    <div>
+                        <span class="hero-meta-label">Pressure</span>
+                        <strong id="heroPressure">-- hPa</strong>
+                    </div>
+                </div>
+                <!-- NEW: Visibility -->
+                <div class="hero-meta-item">
+                    <i class="fas fa-eye" aria-hidden="true"></i>
+                    <div>
+                        <span class="hero-meta-label">Visibility</span>
+                        <strong id="heroVisibility">-- km</strong>
+                    </div>
+                </div>
             </div>
 
             <div class="hero-actions">
@@ -93,6 +142,16 @@
                     <i class="fas fa-map" aria-hidden="true"></i>
                     <span>Weather map</span>
                 </a>
+                <!-- NEW: Share button -->
+                <button class="hero-action" id="heroShareBtn" type="button" title="Share current weather">
+                    <i class="fas fa-share-nodes" aria-hidden="true"></i>
+                    <span>Share</span>
+                </button>
+                <!-- NEW: Rain animation quick toggle -->
+                <button class="hero-action" id="heroRainToggle" type="button" title="Toggle rain animation">
+                    <i class="fas fa-cloud-rain" aria-hidden="true"></i>
+                    <span>Rain effect</span>
+                </button>
             </div>
 
             <div class="hero-search">
@@ -132,6 +191,9 @@
                 </ul>
 
                 <div class="nav-actions">
+                    <button class="nav-icon-btn" id="focusModeToggle" title="Focus mode" aria-label="Toggle focus mode" aria-pressed="false">
+                        <i class="fas fa-compress" aria-hidden="true"></i>
+                    </button>
                     <button class="nav-icon-btn" id="installPwaBtn" title="Install app" aria-label="Install app" style="display:none">
                         <i class="fas fa-download"></i>
                     </button>
@@ -146,10 +208,18 @@
         </div>
     </header>
 
+    <!-- Update-available toast -->
+    <div id="updateToast" class="update-toast" hidden role="status" aria-live="polite">
+        <i class="fas fa-sync-alt" aria-hidden="true"></i>
+        <span>New version available</span>
+        <button id="updateReloadBtn" class="btn btn-sm btn-primary">Refresh</button>
+        <button id="updateDismissBtn" class="btn btn-sm btn-ghost" aria-label="Dismiss">×</button>
+    </div>
+
     <!-- ============================================
          MAIN — Routed Views
          ============================================ -->
-    <main>
+    <main id="mainContent">
 
         <!-- ============ HOME VIEW ============ -->
         <section class="view view-active" data-view="home">
@@ -178,6 +248,16 @@
                         <span><i class="nowcast-dot nowcast-heavy"></i><span data-i18n="nowcast.heavy">Heavy</span></span>
                     </div>
                 </section>
+
+                <!-- Severe weather alert banner -->
+                <div id="severeAlertBanner" class="severe-alert-banner" hidden role="alert">
+                    <i class="fas fa-triangle-exclamation" aria-hidden="true"></i>
+                    <div>
+                        <strong id="severeAlertTitle">Severe weather alert</strong>
+                        <p id="severeAlertMessage"></p>
+                    </div>
+                    <button id="severeAlertDismiss" class="severe-alert-dismiss" aria-label="Dismiss alert">×</button>
+                </div>
 
                 <div class="home-weather-board">
                     <div class="home-weather-panel home-current-panel" id="currentWeatherCard">
@@ -216,6 +296,32 @@
                 </div>
             </div>
 
+            <!-- NEW: "Right Now" glanceable strip -->
+            <div class="container section">
+                <div class="right-now-strip" id="rightNowStrip">
+                    <div class="right-now-item">
+                        <i class="fas fa-temperature-half" aria-hidden="true"></i>
+                        <div><span class="right-now-label">Trend</span><strong id="rightNowTrend">--</strong></div>
+                    </div>
+                    <div class="right-now-item">
+                        <i class="fas fa-person-walking" aria-hidden="true"></i>
+                        <div><span class="right-now-label">Outdoor</span><strong id="rightNowOutdoor">--</strong></div>
+                    </div>
+                    <div class="right-now-item">
+                        <i class="fas fa-umbrella" aria-hidden="true"></i>
+                        <div><span class="right-now-label">Rain</span><strong id="rightNowRain">--</strong></div>
+                    </div>
+                    <div class="right-now-item">
+                        <i class="fas fa-sun" aria-hidden="true"></i>
+                        <div><span class="right-now-label">UV</span><strong id="rightNowUV">--</strong></div>
+                    </div>
+                    <div class="right-now-item">
+                        <i class="fas fa-moon" aria-hidden="true"></i>
+                        <div><span class="right-now-label">Sleep</span><strong id="rightNowSleep">--</strong></div>
+                    </div>
+                </div>
+            </div>
+
             <div class="container section">
                 <h2 class="section-title" data-i18n="lifestyle.title">Lifestyle Recommendations</h2>
                 <p style="text-align:center;max-width:640px;margin:0 auto var(--space-lg);color:var(--text-muted)" data-i18n="lifestyle.subtitle">
@@ -236,17 +342,28 @@
                 <h2 class="section-title" data-i18n="forecast.title">10-Day Forecast</h2>
                 <div id="forecastFull" class="daily-grid"></div>
             </div>
+
             <div class="container section">
                 <div class="forecast-chart-heading">
                     <h2 class="section-title">Temperature Trend</h2>
-                    <button id="forecastFeelsLikeToggle" class="forecast-toggle" type="button" aria-pressed="false">
-                        <span data-i18n="forecast.feelsLike">Feels like</span>
-                    </button>
+                    <div class="forecast-chart-actions">
+                        <button id="forecastFeelsLikeToggle" class="forecast-toggle" type="button" aria-pressed="false">
+                            <span data-i18n="forecast.feelsLike">Feels like</span>
+                        </button>
+                        <button id="meteogramToggle" class="forecast-toggle" type="button" aria-pressed="false" title="Show combined temp + rain + wind chart">
+                            <i class="fas fa-chart-area" aria-hidden="true"></i>
+                            <span>Meteogram</span>
+                        </button>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="tempChart"></canvas>
                 </div>
+                <div class="chart-container" id="meteogramContainer" hidden>
+                    <canvas id="meteogramChart"></canvas>
+                </div>
             </div>
+
             <div class="container section">
                 <h2 class="section-title" data-i18n="forecast.rainfall">Daily Rainfall</h2>
                 <div class="chart-container">
@@ -259,9 +376,14 @@
                     <canvas id="humidityChart"></canvas>
                 </div>
             </div>
-        </section>
 
-        <!-- ============ MAPS VIEW ============ -->
+            <div class="container section">
+                <h2 class="section-title">Wind Rose</h2>
+                <div class="chart-container chart-container-square">
+                    <canvas id="windRoseChart"></canvas>
+                </div>
+            </div>
+        </section>
 
         <!-- ============ MAPS VIEW ============ -->
         <section class="view" data-view="maps">
@@ -286,6 +408,12 @@
                         <button class="map-layer-btn" data-layer="clouds" type="button">
                             <i class="fas fa-cloud"></i><span>Clouds</span>
                         </button>
+                        <button class="map-layer-btn" data-layer="lightning" type="button">
+                            <i class="fas fa-bolt"></i><span>Lightning</span>
+                        </button>
+                        <button class="map-layer-btn" data-layer="aqi" type="button">
+                            <i class="fas fa-lungs"></i><span>Air</span>
+                        </button>
 
                         <div class="map-toolbar-spacer"></div>
 
@@ -295,10 +423,29 @@
                         <button class="map-util-btn" id="mapRecenterBtn" type="button" title="Recenter">
                             <i class="fas fa-crosshairs"></i>
                         </button>
+                        <button class="map-util-btn" id="mapFullscreenBtn" type="button" title="Fullscreen map" aria-label="Fullscreen map">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button class="map-util-btn active" id="mapRainAnimBtn" type="button" title="Toggle rain animation">
+                            <i class="fas fa-play"></i><span>Anim</span>
+                        </button>
+
+                        <!-- NEW: Tracking + Trail buttons -->
+                        <button class="map-util-btn" id="mapTrackToggle" type="button" title="Track my route">
+                            <i class="fas fa-route"></i><span>Track</span>
+                        </button>
+                        <button class="map-util-btn" id="mapTrailHeatBtn" type="button" title="Show where I've been">
+                            <i class="fas fa-fire"></i><span>Trail</span>
+                        </button>
+
+                        <!-- NEW: Nearest rain toggle -->
+                        <button class="map-util-btn active" id="mapNearestRainBtn" type="button" title="Show nearest rain">
+                            <i class="fas fa-location-arrow"></i><span>Rain near</span>
+                        </button>
                     </div>
 
                     <!-- Map shell -->
-                    <div class="weather-map-shell">
+                    <div class="weather-map-shell" id="weatherMapShell">
                         <div id="weather-radar-map" class="weather-map" aria-label="Interactive weather map"></div>
 
                         <!-- Legend -->
@@ -306,6 +453,59 @@
 
                         <!-- Status -->
                         <p id="weatherMapStatus" class="weather-map-status" role="status" hidden></p>
+
+                        <!-- NEW: Rain layer hint -->
+                        <div id="mapRainHint" class="map-rain-hint" hidden>
+                            <i class="fas fa-cloud-rain" aria-hidden="true"></i>
+                            <span>Animated rain echoes</span>
+                        </div>
+
+                        <!-- NEW: Compass -->
+                        <div id="mapCompass" class="map-compass" aria-hidden="true">
+                            <div class="compass-dial">
+                                <span class="compass-arrow">▲</span>
+                                <span class="compass-label">N</span>
+                            </div>
+                        </div>
+
+                        <!-- NEW: Tracking indicator -->
+                        <div id="mapTrackIndicator" class="map-track-indicator" hidden>
+                            <span class="track-dot"></span>
+                            <span class="track-text">Recording route</span>
+                            <span class="track-points" id="mapTrackPoints">0 pts</span>
+                        </div>
+
+                        <!-- NEW: Rain alert controls (sound + notify) -->
+                        <div id="rainAlertControls" class="rain-alert-controls">
+                            <button class="rain-alert-btn" id="rainSoundToggle" type="button" title="Toggle rain sound alert" aria-pressed="false">
+                                <i class="fas fa-volume-xmark" aria-hidden="true"></i>
+                                <span>Sound</span>
+                            </button>
+                            <button class="rain-alert-btn" id="rainNotifyToggle" type="button" title="Toggle rain push notification" aria-pressed="false">
+                                <i class="fas fa-bell-slash" aria-hidden="true"></i>
+                                <span>Notify</span>
+                            </button>
+                        </div>
+
+                        <!-- NEW: Nearest rain badge (primary) -->
+                        <div id="nearestRainBadge" class="nearest-rain-badge" hidden role="status" aria-live="polite">
+                            <i class="fas fa-cloud-rain" aria-hidden="true"></i>
+                            <div class="nearest-rain-info">
+                                <span class="nearest-rain-label">Nearest rain</span>
+                                <strong id="nearestRainText">Scanning…</strong>
+                            </div>
+                            <button id="nearestRainDismiss" class="nearest-rain-dismiss" aria-label="Dismiss">×</button>
+                        </div>
+
+                        <!-- NEW: Multi-direction rain badge -->
+                        <div id="multiRainBadge" class="multi-rain-badge" hidden role="status" aria-live="polite">
+                            <div class="multi-rain-header">
+                                <i class="fas fa-cloud-rain" aria-hidden="true"></i>
+                                <span>Rain nearby</span>
+                                <button id="multiRainDismiss" class="multi-rain-dismiss" aria-label="Dismiss">×</button>
+                            </div>
+                            <div id="multiRainCells" class="multi-rain-cells"></div>
+                        </div>
                     </div>
 
                     <!-- Radar timeline -->
@@ -333,9 +533,20 @@
                 </p>
                 <div id="healthCards" class="grid grid-3"></div>
             </div>
+
+            <div class="container section">
+                <h2 class="section-title">Body & Comfort</h2>
+                <div id="bodyComfortCards" class="grid grid-3"></div>
+            </div>
+
             <div class="container section">
                 <h2 class="section-title">Environmental Health</h2>
                 <div id="environmentalHealth" class="grid grid-3"></div>
+            </div>
+
+            <div class="container section">
+                <h2 class="section-title">Allergy Forecast</h2>
+                <div id="allergyForecast" class="allergy-forecast-grid"></div>
             </div>
         </section>
 
@@ -356,9 +567,22 @@
                 </div>
                 <div id="farmAdvisor" class="grid grid-2"></div>
             </div>
+
+            <div class="container section">
+                <h2 class="section-title">Today's Farm Actions</h2>
+                <div id="farmActions" class="grid grid-3"></div>
+            </div>
+
             <div class="container section">
                 <h2 class="section-title">Crop Calendar</h2>
                 <div id="cropCalendar" class="crop-grid"></div>
+            </div>
+
+            <div class="container section">
+                <h2 class="section-title">Rainfall Accumulation</h2>
+                <div class="chart-container">
+                    <canvas id="rainAccumulationChart"></canvas>
+                </div>
             </div>
         </section>
 
@@ -366,6 +590,21 @@
         <section class="view" data-view="ai">
             <div class="container section">
                 <h2 class="section-title" data-i18n="ai.title">AI Weather Assistant</h2>
+
+                <div class="ai-context-banner" id="aiContextBanner" role="status" aria-live="polite">
+                    <i class="fas fa-location-dot" aria-hidden="true"></i>
+                    <span id="aiContextText">Using current weather · Waiting for data…</span>
+                </div>
+
+                <div class="ai-key-warning" id="aiKeyWarning" hidden role="alert">
+                    <i class="fas fa-key" aria-hidden="true"></i>
+                    <div>
+                        <strong>AI key not configured</strong>
+                        <p>Add your Groq API key in Settings to use the AI assistant.</p>
+                    </div>
+                    <a href="#settings" data-nav="settings" class="btn btn-sm btn-primary">Open Settings</a>
+                </div>
+
                 <div class="ai-chat-wrap">
                     <div id="aiMessages" class="ai-messages">
                         <div class="ai-msg ai-msg-bot">
@@ -381,6 +620,7 @@
                         <button class="ai-suggest-btn" data-q="Best time for outdoor activity?"><i class="fas fa-running"></i> Best time to go outside?</button>
                         <button class="ai-suggest-btn" data-q="When should I plant my maize?"><i class="fas fa-seedling"></i> When to plant?</button>
                         <button class="ai-suggest-btn" data-q="Explain today's health risks"><i class="fas fa-heartbeat"></i> Today's health risks</button>
+                        <button class="ai-suggest-btn" data-q="Should I travel tomorrow? Packing list?"><i class="fas fa-suitcase"></i> Travel planner</button>
                     </div>
                     <div class="ai-input-row">
                         <button class="ai-voice-btn" id="aiVoiceBtn" title="Voice input"><i class="fas fa-microphone"></i></button>
@@ -396,11 +636,21 @@
             <div class="container section">
                 <div class="locations-header">
                     <h2 class="section-title" data-i18n="nav.locations">Saved Locations</h2>
-                    <button class="btn btn-primary" id="addLocationBtn">
-                        <i class="fas fa-plus"></i> Add Location
-                    </button>
+                    <div class="locations-header-actions">
+                        <button class="btn btn-secondary" id="compareLocationsBtn" type="button">
+                            <i class="fas fa-columns" aria-hidden="true"></i> Compare
+                        </button>
+                        <button class="btn btn-primary" id="addLocationBtn">
+                            <i class="fas fa-plus"></i> Add Location
+                        </button>
+                    </div>
                 </div>
                 <div id="locationsList" class="locations-grid"></div>
+
+                <div id="locationComparePanel" class="location-compare-panel" hidden>
+                    <h3 class="section-title">Compare Locations</h3>
+                    <div id="locationCompareContent" class="location-compare-content"></div>
+                </div>
             </div>
         </section>
 
@@ -422,12 +672,28 @@
                 <p id="historyStatus" class="section-note" role="status" aria-live="polite">Historical data will load for the active location.</p>
                 <div id="historyContent" class="grid grid-3"></div>
             </div>
+
+            <div class="container section">
+                <h2 class="section-title">On This Day</h2>
+                <div id="onThisDayCard" class="on-this-day-card"></div>
+            </div>
+
+            <div class="container section">
+                <h2 class="section-title">Extreme Records</h2>
+                <div id="extremeRecords" class="grid grid-3"></div>
+            </div>
+
             <div class="container section">
                 <h2 class="section-title">Climate Trends</h2>
                 <div class="chart-container">
                     <canvas id="climateChart"></canvas>
                     <p id="climateChartStatus" class="chart-status" role="status" hidden></p>
                 </div>
+            </div>
+
+            <div class="container section">
+                <h2 class="section-title">Monthly Averages</h2>
+                <div id="monthlyAveragesTable" class="monthly-averages-wrap"></div>
             </div>
         </section>
 
@@ -449,6 +715,7 @@
                         <select id="themeSelect" class="select">
                             <option value="light" data-i18n="settings.themeLight">Light</option>
                             <option value="dark" data-i18n="settings.themeDark">Dark</option>
+                            <option value="oled">OLED (true black)</option>
                             <option value="auto" data-i18n="settings.themeAuto">Auto</option>
                         </select>
                     </div>
@@ -460,6 +727,107 @@
                             <option value="metric" data-i18n="settings.unitsMetric">Metric (°C, km/h)</option>
                             <option value="imperial" data-i18n="settings.unitsImperial">Imperial (°F, mph)</option>
                         </select>
+                    </div>
+
+                    <!-- Focus Mode -->
+                    <div class="settings-row">
+                        <label class="settings-label">Focus Mode</label>
+                        <label class="settings-toggle">
+                            <input type="checkbox" id="focusModeSetting">
+                            <span class="settings-toggle-slider"></span>
+                            <span class="settings-toggle-label">Show only essential weather</span>
+                        </label>
+                    </div>
+
+                    <!-- Rain Animation -->
+                    <div class="settings-row">
+                        <label class="settings-label">Rain Animation</label>
+                        <label class="settings-toggle">
+                            <input type="checkbox" id="rainAnimSetting" checked>
+                            <span class="settings-toggle-slider"></span>
+                            <span class="settings-toggle-label">Show falling rain effect on hero</span>
+                        </label>
+                    </div>
+
+                    <!-- NEW: Rain Alerts -->
+                    <div class="settings-row settings-row-column">
+                        <label class="settings-label">Rain Alerts</label>
+                        <div class="alert-threshold-row">
+                            <label class="settings-toggle">
+                                <input type="checkbox" id="rainSoundSetting">
+                                <span class="settings-toggle-slider"></span>
+                                <span class="settings-toggle-label">Play sound when rain is near</span>
+                            </label>
+                            <label class="settings-toggle">
+                                <input type="checkbox" id="rainNotifySetting">
+                                <span class="settings-toggle-slider"></span>
+                                <span class="settings-toggle-label">Push notification when rain is near</span>
+                            </label>
+                        </div>
+                        <div class="alert-threshold-row">
+                            <label for="rainAlertDistance">Alert distance (km)</label>
+                            <input type="number" id="rainAlertDistance" class="input input-sm" min="1" max="50" value="5" placeholder="5">
+                        </div>
+                        <p class="section-note">Alerts only trigger while the app is open (browser limitation).</p>
+                    </div>
+
+                    <!-- Skin type for UV timer -->
+                    <div class="settings-row">
+                        <label class="settings-label">Skin type (for UV timer)</label>
+                        <select id="skinTypeSelect" class="select">
+                            <option value="1">Type I — Very fair</option>
+                            <option value="2">Type II — Fair</option>
+                            <option value="3" selected>Type III — Medium</option>
+                            <option value="4">Type IV — Olive</option>
+                            <option value="5">Type V — Brown</option>
+                            <option value="6">Type VI — Deeply pigmented</option>
+                        </select>
+                    </div>
+
+                    <!-- AI API key -->
+                    <div class="settings-row settings-row-column">
+                        <label class="settings-label" for="groqKeyInput">AI API Key (Groq)</label>
+                        <div class="settings-input-row">
+                            <input type="password" id="groqKeyInput" class="input" placeholder="gsk_..." autocomplete="off">
+                            <button id="groqKeySaveBtn" class="btn btn-primary" type="button">Save</button>
+                            <button id="groqKeyClearBtn" class="btn btn-ghost" type="button">Clear</button>
+                        </div>
+                        <p class="section-note">Stored locally in your browser. Never sent anywhere except Groq.</p>
+                    </div>
+
+                    <!-- Custom Alerts -->
+                    <div class="settings-row settings-row-column">
+                        <label class="settings-label">Custom Alerts</label>
+                        <div class="alert-threshold-row">
+                            <label for="alertTempThreshold">Temp above</label>
+                            <input type="number" id="alertTempThreshold" class="input input-sm" min="-20" max="60" placeholder="°C">
+                            <label for="alertWindThreshold">Wind above</label>
+                            <input type="number" id="alertWindThreshold" class="input input-sm" min="0" max="200" placeholder="km/h">
+                        </div>
+                        <div class="alert-threshold-row">
+                            <label class="settings-toggle">
+                                <input type="checkbox" id="alertRainEnabled" checked>
+                                <span class="settings-toggle-slider"></span>
+                                <span class="settings-toggle-label">Rain-start notification</span>
+                            </label>
+                            <label class="settings-toggle">
+                                <input type="checkbox" id="alertUVEnabled" checked>
+                                <span class="settings-toggle-slider"></span>
+                                <span class="settings-toggle-label">High UV notification</span>
+                            </label>
+                        </div>
+                        <div class="alert-threshold-row">
+                            <label class="settings-toggle">
+                                <input type="checkbox" id="alertAQIEnabled" checked>
+                                <span class="settings-toggle-slider"></span>
+                                <span class="settings-toggle-label">Air quality notification</span>
+                            </label>
+                            <label class="settings-toggle">
+                                <input type="checkbox" id="alertFrostEnabled" checked>
+                                <span class="settings-toggle-slider"></span>
+                                <span class="settings-toggle-label">Frost warning</span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Data Management -->
@@ -553,10 +921,34 @@
         </div>
     </footer>
 
-    <!-- Toast container (managed by toast.js) -->
+    <!-- Mobile bottom nav -->
+    <nav class="bottom-nav" id="bottomNav" aria-label="Mobile navigation">
+        <a href="#home" data-nav="home" class="bottom-nav-item">
+            <i class="fas fa-house" aria-hidden="true"></i><span>Home</span>
+        </a>
+        <a href="#forecast" data-nav="forecast" class="bottom-nav-item">
+            <i class="fas fa-calendar-days" aria-hidden="true"></i><span>Forecast</span>
+        </a>
+        <a href="#maps" data-nav="maps" class="bottom-nav-item">
+            <i class="fas fa-map" aria-hidden="true"></i><span>Maps</span>
+        </a>
+        <a href="#health" data-nav="health" class="bottom-nav-item">
+            <i class="fas fa-heart-pulse" aria-hidden="true"></i><span>Health</span>
+        </a>
+        <a href="#ai" data-nav="ai" class="bottom-nav-item">
+            <i class="fas fa-robot" aria-hidden="true"></i><span>AI</span>
+        </a>
+    </nav>
+
+    <!-- Pull to refresh indicator -->
+    <div id="pullToRefresh" class="pull-to-refresh" aria-hidden="true">
+        <i class="fas fa-arrow-down" aria-hidden="true"></i>
+    </div>
+
+    <!-- Toast container -->
     <div id="toastContainer" class="toast-container" aria-live="polite"></div>
 
-    <!-- Charts and interactive maps -->
+    <!-- Libraries -->
     <script src="vendor/chartjs/chart.umd.min.js"></script>
     <script src="vendor/leaflet/leaflet.js"></script>
 

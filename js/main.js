@@ -18,6 +18,10 @@ import { LocationManager } from './modules/locations.js';
 import { Weather } from './modules/weather.js';
 import { AI } from './modules/ai.js';
 import { WeatherMap } from './modules/map.js';
+import { Health } from './modules/health.js';           // NEW
+import { Farming } from './modules/farming.js';  
+import { ShareCard } from './modules/share-card.js';       // NEW
+import { RainAnim } from './modules/rain-animation.js'; // Already imported
 import { runSelfTests } from './core/config-tests.js';
 
 // ============================================
@@ -58,7 +62,10 @@ async function bootstrap() {
     // ---- 6. Theme toggle button ----
     wireThemeToggle();
 
-    // ---- 7. Initialize weather scene (hero canvas) ----
+    // ---- 7. NEW: Focus mode toggle ----
+    wireFocusModeToggle();
+
+    // ---- 8. Initialize weather scene (hero canvas) ----
     try {
         initWeatherScene();
     } catch (err) {
@@ -66,47 +73,76 @@ async function bootstrap() {
         console.error('[WeatherScene] Animation unavailable; continuing without it:', err);
     }
 
-    // ---- 8. Location manager ----
+    // ---- 9. NEW: Rain animation (layered on top of scene) ----
+    try {
+        RainAnim.init();
+    } catch (err) {
+        console.error('[RainAnim] Failed to init; continuing without it:', err);
+    }
+
+    // ---- 10. Location manager ----
     await initLocationManager();
 
-    // ---- 9. Weather map ----
+    // ---- 11. Weather map ----
     WeatherMap.init(LocationManager.getActive());
     Bus.on('route:changed', view => {
         if (view === 'maps') WeatherMap.onShow();
+        else WeatherMap.onHide?.();       // NEW: pause when leaving
         if (view === 'forecast') Weather.resizeCharts();
         if (view === 'history') Weather.loadHistory();
     });
     Bus.on(Events.LOCATION_CHANGED, location => WeatherMap.setLocation(location));
     if (router.current === 'maps') WeatherMap.onShow();
 
-    // ---- 10. Weather module ----
+    // ---- 12. Weather module ----
     Weather.init();
 
-    // ---- 11. AI module ----
+    // ---- 13. NEW: Health module ----
+    Health.init();
+
+    // ---- 14. NEW: Farming module ----
+    Farming.init();
+
+    // ---- 15. AI module ----
     AI.init();
 
-    // ---- 11. PWA install prompt ----
+    // ---- 16. NEW: Wire AI context banner + key warning ----
+    wireAiContext();
+
+    // ---- 17. PWA install prompt ----
     wirePwaInstall();
 
-    // ---- 12. Service worker ----
+    // ---- 18. Service worker ----
     registerServiceWorker();
 
-    // ---- 13. Language change handler ----
+    // ---- 19. NEW: Wire SW update toast ----
+    wireUpdateToast();
+
+    // ---- 20. NEW: Bottom nav active state ----
+    wireBottomNav();
+
+    // ---- 21. NEW: Pull-to-refresh ----
+    wirePullToRefresh();
+
+    // ---- 22. NEW: Hero share button ----
+    ShareCard.init();
+
+    // ---- 23. Language change handler ----
     Bus.on(Events.LANGUAGE_CHANGED, (code) => {
         Toast.info(`Language: ${code.toUpperCase()}`, 1800);
     });
 
-    // ---- 14. Load weather from saved or geolocation ----
+    // ---- 24. Load weather from saved or geolocation ----
     await loadInitialWeather();
     setupWeatherAutoRefresh();
     if (router.current === 'history') Weather.loadHistory();
 
-    // ---- 15. Self-tests in dev ----
+    // ---- 25. Self-tests in dev ----
     if (isDevEnvironment()) {
         await runSelfTests();
     }
 
-    // ---- 16. Welcome toast ----
+    // ---- 26. Welcome toast ----
     maybeShowWelcome();
 
     // ---- Ready ----
@@ -117,6 +153,7 @@ async function bootstrap() {
     window.__EmmiDev = {
         AppState, Bus, Events, Theme, i18n, Toast, Modal,
         router, Settings, LocationManager, Weather, AI,
+        Health, Farming, WeatherMap, RainAnim,
         get weatherScene() { return weatherScene; }
     };
     window.__t = t;
@@ -171,6 +208,108 @@ function updateThemeIcon(btn) {
 }
 
 // ============================================
+// NEW: FOCUS MODE
+// ============================================
+
+function wireFocusModeToggle() {
+    const headerBtn = document.getElementById('focusModeToggle');
+    const settingsToggle = document.getElementById('focusModeSetting');
+
+    const applyFocusMode = (enabled) => {
+        document.body.classList.toggle('focus-mode', enabled);
+        Storage.set('emmidev::focusMode', enabled);
+        if (headerBtn) headerBtn.setAttribute('aria-pressed', String(enabled));
+        if (settingsToggle) settingsToggle.checked = enabled;
+        if (enabled) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+    };
+
+    // Restore saved
+    const saved = Storage.get('emmidev::focusMode', false);
+    applyFocusMode(saved);
+
+    // Header toggle
+    if (headerBtn) {
+        headerBtn.addEventListener('click', () => {
+            const enabled = !document.body.classList.contains('focus-mode');
+            applyFocusMode(enabled);
+        });
+    }
+
+    // Settings toggle
+    if (settingsToggle) {
+        settingsToggle.checked = saved;
+        settingsToggle.addEventListener('change', () => {
+            applyFocusMode(settingsToggle.checked);
+        });
+    }
+
+    // Keyboard shortcut: F to toggle, Esc to exit
+    document.addEventListener('keydown', (e) => {
+        if (e.target.matches('input, textarea, select')) return;
+        if (e.key === 'f' || e.key === 'F') {
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            applyFocusMode(!document.body.classList.contains('focus-mode'));
+        }
+        if (e.key === 'Escape' && document.body.classList.contains('focus-mode')) {
+            applyFocusMode(false);
+        }
+    });
+}
+
+// ============================================
+// NEW: AI CONTEXT BANNER
+// ============================================
+
+function wireAiContext() {
+    const updateBanner = () => {
+        const banner = document.getElementById('aiContextText');
+        if (!banner) return;
+        const w = AppState.get('currentWeather');
+        const loc = LocationManager.getActive();
+        if (!w?.current || !loc) {
+            banner.textContent = 'Using current weather · Waiting for data…';
+            return;
+        }
+        const temp = Math.round(w.current.temperature_2m);
+        const cond = describeWeather(w.current.weather_code);
+        banner.textContent = `Using ${loc.name} · ${temp}°C · ${cond}`;
+    };
+
+    Bus.on(Events.WEATHER_LOADED, updateBanner);
+    Bus.on(Events.LOCATION_CHANGED, updateBanner);
+    updateBanner();
+
+    // Show API key warning if missing
+    const warn = document.getElementById('aiKeyWarning');
+    if (warn) {
+        const hasKey = (() => {
+            try {
+                const key = CONFIG.GROQ_API_KEY || Storage.get('emmidev::groqKey');
+                return typeof key === 'string' && key.trim().length > 0;
+            } catch { return false; }
+        })();
+        warn.hidden = hasKey;
+    }
+}
+
+function describeWeather(code) {
+    const map = {
+        0: 'Clear', 1: 'Mostly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Fog', 48: 'Rime fog',
+        51: 'Light drizzle', 53: 'Drizzle', 55: 'Heavy drizzle',
+        61: 'Light rain', 63: 'Rain', 65: 'Heavy rain',
+        71: 'Light snow', 73: 'Snow', 75: 'Heavy snow',
+        80: 'Showers', 81: 'Showers', 82: 'Heavy showers',
+        95: 'Thunderstorm', 96: 'Thunder + hail', 99: 'Severe storm'
+    };
+    return map[code] || 'Weather';
+}
+
+// ============================================
 // WEATHER SCENE
 // ============================================
 
@@ -192,13 +331,11 @@ function initWeatherScene() {
     });
     weatherScene.start();
 
-    // Pause when tab hidden (perf win)
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) weatherScene.stop();
         else weatherScene.start();
     });
 
-    // Pause when hero canvas is off-screen (perf win)
     if ('IntersectionObserver' in window) {
         const io = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
@@ -258,7 +395,6 @@ async function initLocationManager() {
 // ============================================
 
 async function loadInitialWeather() {
-    // Prefer a fresh device location; use the saved place only if detection fails.
     if ('geolocation' in navigator) {
         try {
             Toast.info('Detecting your location...', 2000);
@@ -284,7 +420,6 @@ async function loadInitialWeather() {
         Toast.warning('This browser does not support location detection. Showing your saved place instead.', 5000);
     }
 
-    // Use a previously saved location if GPS was unavailable, then the default.
     const savedLocation = LocationManager.getActive();
     if (savedLocation) {
         currentLocation = savedLocation;
@@ -293,7 +428,6 @@ async function loadInitialWeather() {
         return;
     }
 
-    // Default
     const fallback = { ...CONFIG.DEFAULT_LOCATION };
     currentLocation = fallback;
     LocationManager.setActive(fallback);
@@ -371,9 +505,178 @@ async function registerServiceWorker() {
     try {
         const reg = await navigator.serviceWorker.register('./service-worker.js');
         console.log('[SW] Registered:', reg.scope);
+
+        // NEW: Track updates
+        reg.addEventListener('updatefound', () => {
+            const newWorker = reg.installing;
+            if (!newWorker) return;
+            newWorker.addEventListener('statechange', () => {
+                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    showUpdateToast();
+                }
+            });
+        });
     } catch (err) {
         console.warn('[SW] Registration failed:', err.message);
     }
+}
+
+// ============================================
+// NEW: UPDATE TOAST
+// ============================================
+
+let pendingWorker = null;
+
+function wireUpdateToast() {
+    const reloadBtn = document.getElementById('updateReloadBtn');
+    const dismissBtn = document.getElementById('updateDismissBtn');
+    const toast = document.getElementById('updateToast');
+
+    if (reloadBtn) {
+        reloadBtn.addEventListener('click', () => {
+            if (pendingWorker) pendingWorker.postMessage({ type: 'SKIP_WAITING' });
+            window.location.reload();
+        });
+    }
+    if (dismissBtn && toast) {
+        dismissBtn.addEventListener('click', () => {
+            toast.hidden = true;
+        });
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+            if (!pendingWorker) return;
+            window.location.reload();
+        });
+    }
+}
+
+function showUpdateToast() {
+    const toast = document.getElementById('updateToast');
+    if (!toast) return;
+    toast.hidden = false;
+    if (navigator.serviceWorker.controller) {
+        pendingWorker = null;
+        navigator.serviceWorker.getRegistration().then(reg => {
+            if (reg?.waiting) pendingWorker = reg.waiting;
+        });
+    }
+}
+
+// ============================================
+// NEW: BOTTOM NAV ACTIVE STATE
+// ============================================
+
+function wireBottomNav() {
+    Bus.on('route:changed', (view) => {
+        document.querySelectorAll('.bottom-nav-item').forEach(el => {
+            const nav = el.dataset.nav;
+            el.classList.toggle('nav-active', nav === view);
+        });
+    });
+}
+
+// ============================================
+// NEW: PULL TO REFRESH
+// ============================================
+
+function wirePullToRefresh() {
+    const indicator = document.getElementById('pullToRefresh');
+    if (!indicator) return;
+
+    let startY = 0;
+    let pulling = false;
+    const threshold = 80;
+    const maxPull = 140;
+    let currentPull = 0;
+
+    const onTouchStart = (e) => {
+        if (window.scrollY > 0) return;
+        startY = e.touches[0].clientY;
+        pulling = true;
+        currentPull = 0;
+    };
+
+    const onTouchMove = (e) => {
+        if (!pulling) return;
+        const delta = e.touches[0].clientY - startY;
+        if (delta <= 0) { currentPull = 0; return; }
+        currentPull = Math.min(delta, maxPull);
+        const progress = Math.min(currentPull / threshold, 1);
+        indicator.style.transform = `translateX(-50%) translateY(${Math.min(currentPull - 40, 60)}px)`;
+        indicator.querySelector('i').style.transform = `rotate(${progress * 180}deg)`;
+        indicator.classList.add('is-visible');
+        if (currentPull > 10) e.preventDefault();
+    };
+
+    const onTouchEnd = async () => {
+        if (!pulling) return;
+        pulling = false;
+        if (currentPull >= threshold) {
+            indicator.classList.add('is-spinning');
+            try {
+                await Weather.loadFor(currentLocation, { refresh: true, quiet: true });
+                Toast.success('Weather updated', 1500);
+            } catch {
+                Toast.error('Could not refresh');
+            }
+            indicator.classList.remove('is-spinning');
+        }
+        indicator.classList.remove('is-visible');
+        indicator.style.transform = '';
+        indicator.querySelector('i').style.transform = '';
+        currentPull = 0;
+    };
+
+    document.addEventListener('touchstart', onTouchStart, { passive: true });
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd, { passive: true });
+}
+
+// ============================================
+// NEW: HERO SHARE BUTTON
+// ============================================
+
+function wireHeroShare() {
+    const btn = document.getElementById('heroShareBtn');
+    if (!btn) return;
+
+    btn.addEventListener('click', async () => {
+        const w = AppState.get('currentWeather');
+        const loc = LocationManager.getActive();
+        if (!w?.current || !loc) {
+            Toast.info('Weather data not ready yet');
+            return;
+        }
+
+        const temp = Math.round(w.current.temperature_2m);
+        const cond = describeWeather(w.current.weather_code);
+        const text = `${loc.name}: ${temp}°C, ${cond} — from EmmiDev Weather`;
+        const url = window.location.href;
+
+        // Use Web Share API if available
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'EmmiDev Weather',
+                    text,
+                    url
+                });
+                return;
+            } catch (err) {
+                if (err.name === 'AbortError') return;
+            }
+        }
+
+        // Fallback: copy to clipboard
+        try {
+            await navigator.clipboard.writeText(`${text}\n${url}`);
+            Toast.success('Copied to clipboard');
+        } catch {
+            Toast.error('Could not share');
+        }
+    });
 }
 
 // ============================================

@@ -1,16 +1,46 @@
-/* Progressive web app install controls and safe-area spacing. */
+/* ============================================================
+   EmmiDev Weather — PWA
+   Safe areas, install prompt, standalone display tweaks
+   ============================================================ */
 
-#installPwaBtn,
-#installPwaBtn2 {
-    touch-action: manipulation;
-}
-
-.app-footer {
-    padding-bottom: max(var(--space-lg), env(safe-area-inset-bottom));
-}
-
-@media (display-mode: standalone) {
-    .app-header {
-        padding-top: env(safe-area-inset-top);
+/* ---------- Standalone display ---------- */
+@media all and (display-mode: standalone) {
+    .app-header { padding-top: env(safe-area-inset-top, 0); }
+    .hero-canvas-wrap { padding-top: env(safe-area-inset-top, 0); }
+    .bottom-nav { padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+    .hero-geo-btn {
+        bottom: calc(16px + env(safe-area-inset-bottom, 0));
     }
+}
+
+/* ---------- iOS status bar tint ---------- */
+@supports (padding: max(0px)) {
+    .app-header {
+        padding-left: max(var(--space-md), env(safe-area-inset-left));
+        padding-right: max(var(--space-md), env(safe-area-inset-right));
+    }
+}
+
+/* ---------- Install button highlight ---------- */
+#installPwaBtn {
+    animation: installPulse 2s infinite;
+}
+@keyframes installPulse {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(1.1); }
+}
+
+/* ---------- Offline banner (if added) ---------- */
+.offline-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: var(--warning);
+    color: #fff;
+    text-align: center;
+    padding: 8px;
+    font-size: var(--text-xs);
+    font-weight: 700;
+    z-index: 9999;
 }

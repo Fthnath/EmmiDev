@@ -1,90 +1,52 @@
-/* ============================================
-   EmmiDev Weather — Animations
-   ============================================ */
+/* ============================================================
+   EmmiDev Weather — Animation utilities & shared keyframes
+   ============================================================ */
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
+/* ---------- Fade in ---------- */
+.fade-in { animation: fadeIn 0.4s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+/* ---------- Slide up ---------- */
+.slide-up { animation: slideUp 0.4s ease; }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(16px); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes fadeOut {
-    from { opacity: 1; }
-    to   { opacity: 0; }
-}
-
-@keyframes slideInRight {
-    from { opacity: 0; transform: translateX(30px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-30px); }
-    to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes slideInUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
+/* ---------- Pulse ---------- */
+.pulse { animation: pulse 2s infinite; }
 @keyframes pulse {
-    0%, 100% { transform: scale(1); opacity: 1; }
-    50%      { transform: scale(1.05); opacity: 0.85; }
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.5; }
 }
 
-@keyframes shimmer {
-    0%   { background-position: -400px 0; }
-    100% { background-position: 400px 0; }
-}
-
+/* ---------- Bounce ---------- */
+.bounce { animation: bounce 1.2s infinite; }
 @keyframes bounce {
     0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-8px); }
+    50%      { transform: translateY(-6px); }
 }
 
-@keyframes float {
+/* ---------- Shake ---------- */
+.shake { animation: shake 0.4s; }
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25%      { transform: translateX(-4px); }
+    75%      { transform: translateX(4px); }
+}
+
+/* ---------- Icon animations per condition ---------- */
+.weather-icon-sun { animation: spinSlow 20s linear infinite; }
+@keyframes spinSlow { to { transform: rotate(360deg); } }
+
+.weather-icon-cloud { animation: floatCloud 6s ease-in-out infinite; }
+@keyframes floatCloud {
+    0%, 100% { transform: translateX(0); }
+    50%      { transform: translateX(4px); }
+}
+
+.weather-icon-rain { animation: rainDrop 1.4s ease-in-out infinite; }
+@keyframes rainDrop {
     0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-10px); }
-}
-
-/* Utility classes */
-.animate-fade-in   { animation: fadeIn 400ms ease forwards; }
-.animate-slide-up  { animation: slideInUp 500ms ease forwards; }
-.animate-slide-in  { animation: slideInLeft 500ms ease forwards; }
-.animate-float     { animation: float 3s ease-in-out infinite; }
-.animate-pulse     { animation: pulse 2s ease-in-out infinite; }
-
-/* Stagger delays */
-.delay-1 { animation-delay: 100ms; }
-.delay-2 { animation-delay: 200ms; }
-.delay-3 { animation-delay: 300ms; }
-.delay-4 { animation-delay: 400ms; }
-.delay-5 { animation-delay: 500ms; }
-
-/* Skeleton loading */
-.skeleton {
-    background: linear-gradient(90deg,
-        var(--bg-sunken) 0%,
-        var(--border) 50%,
-        var(--bg-sunken) 100%);
-    background-size: 800px 100%;
-    animation: shimmer 1.4s linear infinite;
-    border-radius: var(--radius-sm);
-    color: transparent;
-}
-
-/* Respect reduced motion */
-@media (prefers-reduced-motion: reduce) {
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
-        scroll-behavior: auto !important;
-    }
+    50%      { transform: translateY(2px); }
 }

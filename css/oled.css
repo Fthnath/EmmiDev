@@ -1,0 +1,68 @@
+/* ============================================================
+   EmmiDev Weather — OLED Theme
+   True black background — saves battery on OLED screens
+   ============================================================ */
+
+[data-theme="oled"] body {
+    background: #000;
+    color: var(--text);
+}
+
+[data-theme="oled"] .hero-overlay {
+    background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0.05) 0%,
+        rgba(0, 0, 0, 0.35) 55%,
+        #000 100%
+    );
+}
+
+[data-theme="oled"] .app-header,
+[data-theme="oled"] .app-footer,
+[data-theme="oled"] .bottom-nav {
+    background: #000;
+    border-color: #1a1a1a;
+}
+
+[data-theme="oled"] .card,
+[data-theme="oled"] .glass-card,
+[data-theme="oled"] .right-now-strip,
+[data-theme="oled"] .chart-container,
+[data-theme="oled"] .settings-card,
+[data-theme="oled"] .location-compare-panel,
+[data-theme="oled"] .farm-action-card,
+[data-theme="oled"] .allergy-card,
+[data-theme="oled"] .health-card,
+[data-theme="oled"] .lifestyle-card,
+[data-theme="oled"] .home-weather-panel,
+[data-theme="oled"] .location-card {
+    background: #0c0c0c;
+    border-color: #1c1c1c;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="oled"] .right-now-item,
+[data-theme="oled"] .location-compare-card,
+[data-theme="oled"] .monthly-averages-wrap thead th,
+[data-theme="oled"] .hourly-item,
+[data-theme="oled"] .daily-item,
+[data-theme="oled"] .nowcast-step,
+[data-theme="oled"] .weather-detail {
+    background: #0a0a0a;
+}
+
+[data-theme="oled"] .severe-alert-banner {
+    background: #1a0505;
+    border-color: #4a1212;
+}
+
+[data-theme="oled"] .input,
+[data-theme="oled"] .select {
+    background: #0e0e0e;
+    border-color: #222;
+    color: var(--text);
+}
+
+[data-theme="oled"] .chart-container canvas {
+    filter: brightness(0.98) contrast(1.05);
+}
