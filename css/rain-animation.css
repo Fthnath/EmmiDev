@@ -1,0 +1,34 @@
+/* ============================================================
+   EmmiDev Weather — Rain Animation Overlay
+   Fullscreen transparent canvas for particles
+   ============================================================ */
+
+.rain-animation-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.rain-animation-overlay[data-condition="clear"] {
+    display: none;
+}
+
+/* Optional subtle gradient tint per condition */
+.rain-animation-overlay[data-condition="rain"]::before,
+.rain-animation-overlay[data-condition="thunderstorm"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(26, 58, 107, 0.15), transparent);
+    pointer-events: none;
+}
+
+.rain-animation-overlay[data-condition="snow"]::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(200, 216, 235, 0.15), transparent);
+    pointer-events: none;
+}
