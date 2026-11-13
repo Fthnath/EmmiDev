@@ -153,15 +153,49 @@
 
         <!-- ============ HOME VIEW ============ -->
         <section class="view view-active" data-view="home">
-            <div class="container section">
-                <h2 class="section-title" data-i18n="current.title">Current Weather</h2>
-                <div id="currentWeatherCard">
-                    <div class="card">
-                        <div class="card-body" style="text-align:center;padding:48px 24px">
-                            <div class="loader"></div>
-                            <p style="color:var(--text-muted);margin-top:16px" data-i18n="search.detecting">Detecting your location...</p>
+            <div class="container section home-overview">
+                <div class="home-overview-header">
+                    <div>
+                        <h2 class="home-overview-title" data-i18n="current.title">Current Weather</h2>
+                    </div>
+                    <a href="#maps" data-nav="maps" class="home-map-link">
+                        <i class="fas fa-map-location-dot" aria-hidden="true"></i>
+                        <span data-i18n="nav.maps">Maps</span>
+                        <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    </a>
+                </div>
+
+                <div class="home-weather-board">
+                    <div class="home-weather-panel home-current-panel" id="currentWeatherCard">
+                        <div class="card">
+                            <div class="card-body" style="text-align:center;padding:48px 24px">
+                                <div class="loader"></div>
+                                <p style="color:var(--text-muted);margin-top:16px" data-i18n="search.detecting">Detecting your location...</p>
+                            </div>
                         </div>
                     </div>
+
+                    <section class="home-weather-panel home-hourly-panel">
+                        <div class="home-panel-heading">
+                            <div>
+                                <h3 data-i18n="forecast.hourly">Hourly Forecast</h3>
+                            </div>
+                        </div>
+                        <div id="hourlyForecast" class="hourly-scroll" data-i18n-aria="forecast.hourly" aria-label="Hourly Forecast" tabindex="0"></div>
+                    </section>
+
+                    <section class="home-weather-panel home-daily-panel">
+                        <div class="home-panel-heading">
+                            <div>
+                                <h3 data-i18n="forecast.title">10-Day Forecast</h3>
+                            </div>
+                            <a href="#forecast" data-nav="forecast" class="home-text-link">
+                                <span data-i18n="nav.forecast">Forecast</span>
+                                <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                            </a>
+                        </div>
+                        <div id="dailyForecast" class="daily-grid" data-i18n-aria="forecast.title" aria-label="10-Day Forecast" tabindex="0"></div>
+                    </section>
                 </div>
             </div>
 
@@ -171,16 +205,6 @@
                     Personalized suggestions based on current weather conditions
                 </p>
                 <div id="lifestyleCards" class="grid grid-3"></div>
-            </div>
-
-            <div class="container section">
-                <h2 class="section-title" data-i18n="forecast.hourly">Hourly Forecast</h2>
-                <div id="hourlyForecast" class="hourly-scroll"></div>
-            </div>
-
-            <div class="container section">
-                <h2 class="section-title" data-i18n="forecast.title">10-Day Forecast</h2>
-                <div id="dailyForecast" class="daily-grid"></div>
             </div>
 
             <div class="container section">

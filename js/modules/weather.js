@@ -348,8 +348,8 @@ class WeatherModule {
                         <p>${new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' })}</p>
                     </div>
                     <div style="font-size:0.85rem;opacity:0.9;text-align:right">
-                        <div><i class="fas fa-arrow-up"></i> ${Math.round(today.temperature_2m_max[0])}°</div>
-                        <div><i class="fas fa-arrow-down"></i> ${Math.round(today.temperature_2m_min[0])}°</div>
+                        <div><i class="fas fa-arrow-up"></i> ${Math.round(today.temperature_2m_max[0])}°${tempUnit}</div>
+                        <div><i class="fas fa-arrow-down"></i> ${Math.round(today.temperature_2m_min[0])}°${tempUnit}</div>
                     </div>
                 </div>
 
@@ -440,7 +440,7 @@ class WeatherModule {
                 <div class="hourly-item">
                     <div class="hourly-time">${label}</div>
                     <div class="hourly-icon"><i class="${icon}"></i></div>
-                    <div class="hourly-temp">${temp}°</div>
+                    <div class="hourly-temp">${temp}°${tempUnit}</div>
                     ${pop > 10 ? `<div class="hourly-precip"><i class="fas fa-droplet"></i> ${pop}%</div>` : ''}
                 </div>
             `;
@@ -467,8 +467,8 @@ class WeatherModule {
                     <div class="daily-day">${dayLabel}</div>
                     <div class="daily-date">${formatShort(d)}</div>
                     <div class="daily-icon"><i class="${icon}"></i></div>
-                    <div class="daily-temp-high">${hi}°</div>
-                    <div class="daily-temp-low">${lo}°</div>
+                    <div class="daily-temp-high">${hi}°${tempUnit}</div>
+                    <div class="daily-temp-low">${lo}°${tempUnit}</div>
                     ${pop > 10 ? `<div class="daily-precip"><i class="fas fa-droplet"></i> ${pop}%</div>` : ''}
                 </div>
             `;
@@ -493,7 +493,7 @@ class WeatherModule {
                     <div class="daily-day">${i === 0 ? 'Today' : formatDay(d)}</div>
                     <div class="daily-date">${formatShort(d)}</div>
                     <div class="daily-icon"><i class="${icon}"></i></div>
-                    <div class="daily-temp-high">${hi}° / <span style="font-size:0.8rem;color:var(--text-muted)">${lo}°</span></div>
+                    <div class="daily-temp-high">${hi}°${tempUnit} / <span style="font-size:0.8rem;color:var(--text-muted)">${lo}°${tempUnit}</span></div>
                     ${pop > 10 ? `<div class="daily-precip"><i class="fas fa-droplet"></i> ${pop}%</div>` : ''}
                     ${rain > 0.1 ? `<div style="font-size:0.75rem;color:var(--primary)">${formatRain(rain)}</div>` : ''}
                 </div>
