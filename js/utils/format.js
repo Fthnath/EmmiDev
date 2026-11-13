@@ -7,7 +7,7 @@ export function formatTemp(value, unit = 'C', decimals = 0) {
 export function formatWind(value, unit = 'metric') {
     if (value == null) return '--';
     if (unit === 'imperial') return `${value.toFixed(1)} mph`;
-    return `${(value * 3.6).toFixed(1)} km/h`;
+    return `${value.toFixed(1)} km/h`;
 }
 export function formatDistance(meters, unit = 'metric') {
     if (meters == null) return '--';

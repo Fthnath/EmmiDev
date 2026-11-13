@@ -141,8 +141,8 @@ export async function fetchWeather(lat, lon, units = 'metric', options = {}) {
     const precipUnit = units === 'imperial' ? 'inch' : 'mm';
     const url = `${CONFIG.OPEN_METEO_BASE}/forecast?` + new URLSearchParams({
         latitude: coords.lat, longitude: coords.lon,
-        current: ['temperature_2m','relative_humidity_2m','apparent_temperature','is_day','precipitation','rain','weather_code','cloud_cover','pressure_msl','surface_pressure','wind_speed_10m','wind_direction_10m','wind_gusts_10m'].join(','),
-        hourly: ['temperature_2m','relative_humidity_2m','apparent_temperature','precipitation_probability','precipitation','weather_code','cloud_cover','wind_speed_10m','wind_direction_10m','uv_index','is_day'].join(','),
+        current: ['temperature_2m','relative_humidity_2m','apparent_temperature','is_day','precipitation','rain','weather_code','cloud_cover','pressure_msl','surface_pressure','visibility','wind_speed_10m','wind_direction_10m','wind_gusts_10m'].join(','),
+        hourly: ['temperature_2m','relative_humidity_2m','apparent_temperature','precipitation_probability','precipitation','weather_code','cloud_cover','wind_speed_10m','wind_direction_10m','wind_gusts_10m','uv_index','is_day'].join(','),
         daily: ['weather_code','temperature_2m_max','temperature_2m_min','apparent_temperature_max','apparent_temperature_min','sunrise','sunset','uv_index_max','precipitation_sum','precipitation_probability_max','wind_speed_10m_max','wind_direction_10m_dominant'].join(','),
         timezone: 'auto',
         temperature_unit: tempUnit,
@@ -151,6 +151,23 @@ export async function fetchWeather(lat, lon, units = 'metric', options = {}) {
         forecast_days: 10
     }).toString();
     return cachedFetch(url, CONFIG.CACHE.WEATHER, options);
+}
+
+export async function fetchPrecipitationNowcast(lat, lon, units = 'metric', options = {}) {
+    const coords = validateCoordinates(lat, lon);
+    if (units !== 'metric' && units !== 'imperial') {
+        throw new TypeError('Units must be "metric" or "imperial"');
+    }
+    const precipUnit = units === 'imperial' ? 'inch' : 'mm';
+    const url = `${CONFIG.OPEN_METEO_BASE}/forecast?` + new URLSearchParams({
+        latitude: coords.lat,
+        longitude: coords.lon,
+        minutely_15: 'precipitation',
+        timezone: 'auto',
+        precipitation_unit: precipUnit,
+        forecast_minutely_15: '8'
+    }).toString();
+    return cachedFetch(url, 5 * 60 * 1000, options);
 }
 
 export async function fetchAirQuality(lat, lon, options = {}) {

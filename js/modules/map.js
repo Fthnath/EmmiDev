@@ -13,6 +13,7 @@ class WeatherMapModule {
         this.radarHost = null;
         this.currentFrameIndex = 0;
         this.playbackTimer = null;
+        this.playbackSpeed = 1;
         this.isPlaying = false;
         this.activeLayer = null;
         this.layerLayers = {};
@@ -495,6 +496,8 @@ class WeatherMapModule {
         this.timelinePlay = document.getElementById('radarPlayPause');
         this.timelineSlider = document.getElementById('radarSlider');
         this.timelineLabel = document.getElementById('radarTimestamp');
+        this.timelineSpeed = document.getElementById('radarSpeedToggle');
+        this.timelineChips = document.getElementById('radarFrameChips');
 
         if (this.timelinePlay) {
             this.timelinePlay.addEventListener('click', () => {
@@ -508,6 +511,15 @@ class WeatherMapModule {
                 this.setFrame(parseInt(e.target.value, 10));
             });
         }
+        this.timelineSpeed?.addEventListener('click', () => {
+            this.playbackSpeed = this.playbackSpeed === 1 ? 2 : 1;
+            this.timelineSpeed.textContent = `${this.playbackSpeed}×`;
+            this.timelineSpeed.setAttribute('aria-label', `Radar playback speed, ${this.playbackSpeed}x`);
+            if (this.isPlaying) {
+                this.pausePlayback();
+                this.startPlayback();
+            }
+        });
     }
 
     startPlayback() {
@@ -517,11 +529,12 @@ class WeatherMapModule {
             this.timelinePlay.innerHTML = '<i class="fas fa-pause"></i>';
             this.timelinePlay.classList.add('playing');
         }
+        if (this.playbackTimer) clearInterval(this.playbackTimer);
         this.playbackTimer = setInterval(() => {
             let next = this.currentFrameIndex + 1;
             if (next >= this.radarLayers.length) next = 0;
             this.setFrame(next);
-        }, 550);
+        }, 550 / this.playbackSpeed);
     }
 
     pausePlayback() {
@@ -557,6 +570,30 @@ class WeatherMapModule {
             const mm = String(date.getMinutes()).padStart(2, '0');
             const isFuture = frame.time * 1000 > Date.now();
             this.timelineLabel.textContent = `${isFuture ? 'Forecast' : 'Observed'} • ${hh}:${mm}`;
+        }
+        if (this.timelineChips) {
+            if (this.timelineChips.childElementCount !== this.radarFrames.length) {
+                this.timelineChips.replaceChildren(...this.radarFrames.map((frame, index) => {
+                    const button = document.createElement('button');
+                    const date = new Date(frame.time * 1000);
+                    button.type = 'button';
+                    button.className = 'radar-frame-chip';
+                    button.textContent = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    button.setAttribute('aria-label', `${frame.time * 1000 > Date.now() ? 'Forecast' : 'Observed'} radar frame ${button.textContent}`);
+                    button.addEventListener('click', () => {
+                        this.pausePlayback();
+                        this.setFrame(index);
+                    });
+                    return button;
+                }));
+            }
+            this.timelineChips.querySelectorAll('.radar-frame-chip').forEach((chip, index) => {
+                const frameDate = new Date(this.radarFrames[index].time * 1000);
+                chip.textContent = frameDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                chip.setAttribute('aria-label', `${this.radarFrames[index].time * 1000 > Date.now() ? 'Forecast' : 'Observed'} radar frame ${chip.textContent}`);
+                chip.classList.toggle('active', index === this.currentFrameIndex);
+                chip.setAttribute('aria-current', index === this.currentFrameIndex ? 'true' : 'false');
+            });
         }
     }
 

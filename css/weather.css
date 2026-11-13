@@ -75,6 +75,143 @@
     box-shadow: var(--shadow-sm);
 }
 
+.home-nowcast-panel {
+    margin-bottom: var(--space);
+    padding: var(--space);
+}
+
+.home-nowcast-panel .home-panel-heading {
+    margin-bottom: var(--space-sm);
+}
+
+.nowcast-source {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.nowcast-alert {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: fit-content;
+    max-width: 100%;
+    min-height: 34px;
+    margin-bottom: var(--space-sm);
+    padding: 6px 12px;
+    border-radius: var(--radius-full);
+    font-size: 0.84rem;
+    font-weight: 650;
+}
+
+.nowcast-rain {
+    background: #fff3d4;
+    color: #825400;
+}
+
+.nowcast-rain i {
+    animation: nowcast-pulse 1.5s ease-in-out infinite;
+}
+
+.nowcast-dry,
+.nowcast-unavailable {
+    background: var(--surface-hover);
+    color: var(--text-muted);
+}
+
+.nowcast-timeline {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+}
+
+.nowcast-step {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+}
+
+.nowcast-step-label,
+.nowcast-step-amount {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.nowcast-step-amount {
+    font-size: 0.68rem;
+}
+
+.nowcast-step-track {
+    position: relative;
+    height: 7px;
+    overflow: visible;
+    border-radius: var(--radius-full);
+    background: var(--border);
+}
+
+.nowcast-step-track i {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    background: #cbd5e1;
+}
+
+.nowcast-step.light .nowcast-step-track i,
+.nowcast-dot.nowcast-light {
+    background: #7dd3fc;
+}
+
+.nowcast-step.moderate .nowcast-step-track i,
+.nowcast-dot.nowcast-moderate {
+    background: #2585e5;
+}
+
+.nowcast-step.heavy .nowcast-step-track i,
+.nowcast-dot.nowcast-heavy {
+    background: #173a8a;
+}
+
+.nowcast-step:first-child .nowcast-step-track::after {
+    position: absolute;
+    top: 50%;
+    left: min(var(--nowcast-progress, 0%), 95%);
+    width: 11px;
+    height: 11px;
+    border: 2px solid var(--surface);
+    border-radius: 50%;
+    background: var(--primary);
+    box-shadow: 0 0 0 2px var(--primary);
+    content: "";
+    transform: translate(-2px, -50%);
+}
+
+.nowcast-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: var(--space-sm);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.nowcast-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nowcast-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border-strong);
+}
+
+@keyframes nowcast-pulse {
+    50% { opacity: 0.45; }
+}
+
 .home-current-panel {
     padding: 0;
     overflow: hidden;
@@ -100,12 +237,162 @@
 .home-hourly-panel .hourly-scroll {
     max-height: 248px;
     align-items: stretch;
+    mask-image: linear-gradient(to right, #000 0%, #000 91%, transparent 100%);
+    scrollbar-width: none;
+}
+
+.home-hourly-panel .hourly-scroll::-webkit-scrollbar {
+    display: none;
 }
 
 .home-hourly-panel .hourly-item {
     flex: 0 0 78px;
     min-width: 78px;
     padding: 10px 6px;
+}
+
+.forecast-toggle,
+.radar-speed-btn {
+    min-height: 34px;
+    padding: 6px 11px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    background: var(--surface-hover);
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.78rem;
+    font-weight: 650;
+}
+
+.forecast-toggle[aria-pressed="true"] {
+    border-color: var(--primary);
+    background: color-mix(in srgb, var(--primary) 12%, var(--surface));
+    color: var(--primary);
+}
+
+.forecast-toggle:focus-visible,
+.radar-speed-btn:focus-visible {
+    outline: 3px solid var(--primary);
+    outline-offset: 2px;
+}
+
+.hourly-precip-track {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: 14px;
+    height: 22px;
+    margin: 0 auto;
+    overflow: hidden;
+    border-radius: 4px 4px 2px 2px;
+    background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+}
+
+.hourly-precip-track span {
+    width: 100%;
+    border-radius: inherit;
+    background: linear-gradient(180deg, #6cc5ff, #1a73e8);
+}
+
+.hourly-wind {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+}
+
+.hourly-wind i {
+    color: var(--primary);
+    font-size: 0.7rem;
+}
+
+.hourly-wind .wind-strong {
+    color: var(--warning);
+    font-weight: 700;
+}
+
+.hourly-sun-marker {
+    display: grid;
+    flex: 0 0 60px;
+    align-content: center;
+    justify-items: center;
+    gap: 3px;
+    padding: 4px;
+    border-left: 2px solid #f59e0b;
+    color: var(--text-muted);
+    font-size: 0.62rem;
+    text-align: center;
+}
+
+.hourly-sun-marker i {
+    color: #f59e0b;
+}
+
+.forecast-chart-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space);
+}
+
+.forecast-chart-heading .section-title {
+    flex: 1;
+}
+
+.forecast-expandable {
+    padding: 0;
+    text-align: left;
+}
+
+.forecast-day-summary {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 4px 10px;
+    padding: var(--space);
+    cursor: pointer;
+    list-style: none;
+}
+
+.forecast-day-summary::-webkit-details-marker {
+    display: none;
+}
+
+.forecast-day-summary .daily-icon {
+    grid-row: span 2;
+    margin: 0;
+}
+
+.forecast-day-summary .daily-precip {
+    grid-column: 1 / 3;
+}
+
+.forecast-day-chevron {
+    grid-column: 3;
+    grid-row: 1 / 3;
+    color: var(--text-muted);
+    transition: transform var(--t-fast);
+}
+
+.forecast-expandable[open] .forecast-day-chevron {
+    transform: rotate(180deg);
+}
+
+.forecast-day-details {
+    display: grid;
+    gap: 6px;
+    padding: 0 var(--space) var(--space);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.forecast-day-details span:first-child {
+    padding-top: 8px;
 }
 
 .home-daily-panel {
@@ -279,6 +566,14 @@
 
     .home-current-panel {
         padding: 0;
+    }
+
+    .nowcast-timeline {
+        gap: 6px;
+    }
+
+    .forecast-chart-heading {
+        align-items: flex-start;
     }
 
     .farm-controls,

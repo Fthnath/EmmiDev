@@ -159,9 +159,8 @@
 
 /* ---------- Timeline ---------- */
 .radar-timeline {
-    display: flex;
-    align-items: center;
-    gap: 14px;
+    display: grid;
+    gap: 10px;
     padding: 14px 18px;
     background: var(--card-bg, #fff);
     border-top: 1px solid var(--border, #e5e7eb);
@@ -174,9 +173,48 @@
 }
 .radar-timeline.visible {
     opacity: 1;
-    max-height: 100px;
+    max-height: 150px;
     padding-top: 14px;
     padding-bottom: 14px;
+}
+
+.radar-timeline-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.radar-frame-chips {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px 0 5px;
+    scrollbar-width: thin;
+}
+
+.radar-frame-chip {
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 999px;
+    background: var(--surface, #fff);
+    color: var(--text-muted, #666);
+    font: inherit;
+    font-size: 0.72rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+}
+
+.radar-frame-chip.active {
+    border-color: #1a73e8;
+    background: #e8f1ff;
+    color: #1558a6;
+}
+
+.radar-frame-chip:focus-visible {
+    outline: 2px solid #1a73e8;
+    outline-offset: 2px;
 }
 
 .radar-play-btn {
@@ -230,7 +268,7 @@
     font-size: 0.82rem;
     font-weight: 600;
     color: var(--text-muted, #666);
-    min-width: 130px;
+    min-width: 110px;
     text-align: right;
     font-variant-numeric: tabular-nums;
 }
@@ -256,6 +294,7 @@
     .map-layer-btn span,
     .map-util-btn span { display: none; }
     .map-layer-btn, .map-util-btn { padding: 9px 12px; }
+    .radar-timeline-controls { gap: 8px; }
     .radar-timestamp { min-width: auto; font-size: 0.75rem; }
     .map-legend { bottom: 16px; left: 12px; padding: 8px 10px; min-width: 140px; }
 }

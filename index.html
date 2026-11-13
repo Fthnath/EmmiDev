@@ -165,6 +165,20 @@
                     </a>
                 </div>
 
+                <section id="precipNowcast" class="home-weather-panel home-nowcast-panel" aria-live="polite">
+                    <div class="home-panel-heading">
+                        <h3 data-i18n="nowcast.title">Next hour</h3>
+                        <span id="nowcastSource" class="nowcast-source"></span>
+                    </div>
+                    <div id="nowcastAlert" class="nowcast-alert" role="status"></div>
+                    <div id="nowcastTimeline" class="nowcast-timeline"></div>
+                    <div class="nowcast-legend" data-i18n-aria="nowcast.title" aria-label="Next hour">
+                        <span><i class="nowcast-dot nowcast-light"></i><span data-i18n="nowcast.light">Light</span></span>
+                        <span><i class="nowcast-dot nowcast-moderate"></i><span data-i18n="nowcast.moderate">Moderate</span></span>
+                        <span><i class="nowcast-dot nowcast-heavy"></i><span data-i18n="nowcast.heavy">Heavy</span></span>
+                    </div>
+                </section>
+
                 <div class="home-weather-board">
                     <div class="home-weather-panel home-current-panel" id="currentWeatherCard">
                         <div class="card">
@@ -180,6 +194,9 @@
                             <div>
                                 <h3 data-i18n="forecast.hourly">Hourly Forecast</h3>
                             </div>
+                            <button id="hourlyFeelsLikeToggle" class="forecast-toggle" type="button" aria-pressed="false">
+                                <span data-i18n="forecast.feelsLike">Feels like</span>
+                            </button>
                         </div>
                         <div id="hourlyForecast" class="hourly-scroll" data-i18n-aria="forecast.hourly" aria-label="Hourly Forecast" tabindex="0"></div>
                     </section>
@@ -220,9 +237,20 @@
                 <div id="forecastFull" class="daily-grid"></div>
             </div>
             <div class="container section">
-                <h2 class="section-title">Temperature Trend</h2>
+                <div class="forecast-chart-heading">
+                    <h2 class="section-title">Temperature Trend</h2>
+                    <button id="forecastFeelsLikeToggle" class="forecast-toggle" type="button" aria-pressed="false">
+                        <span data-i18n="forecast.feelsLike">Feels like</span>
+                    </button>
+                </div>
                 <div class="chart-container">
                     <canvas id="tempChart"></canvas>
+                </div>
+            </div>
+            <div class="container section">
+                <h2 class="section-title" data-i18n="forecast.rainfall">Daily Rainfall</h2>
+                <div class="chart-container">
+                    <canvas id="precipitationChart"></canvas>
                 </div>
             </div>
             <div class="container section">
@@ -282,11 +310,15 @@
 
                     <!-- Radar timeline -->
                     <div id="radarTimeline" class="radar-timeline">
-                        <button id="radarPlayPause" class="radar-play-btn" aria-label="Play radar animation">
-                            <i class="fas fa-play"></i>
-                        </button>
-                        <input id="radarSlider" type="range" min="0" max="0" value="0" class="radar-slider" aria-label="Radar frame">
-                        <span id="radarTimestamp" class="radar-timestamp">—</span>
+                        <div class="radar-timeline-controls">
+                            <button id="radarPlayPause" class="radar-play-btn" type="button" aria-label="Play radar animation">
+                                <i class="fas fa-play"></i>
+                            </button>
+                            <input id="radarSlider" type="range" min="0" max="0" value="0" class="radar-slider" aria-label="Radar frame">
+                            <span id="radarTimestamp" class="radar-timestamp">—</span>
+                            <button id="radarSpeedToggle" class="radar-speed-btn" type="button" aria-label="Radar playback speed, 1x">1×</button>
+                        </div>
+                        <div id="radarFrameChips" class="radar-frame-chips" aria-label="Radar frame timestamps"></div>
                     </div>
                 </div>
             </div>

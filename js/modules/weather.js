@@ -7,8 +7,8 @@ import { CONFIG } from '../config.js';
 import { Storage } from '../core/storage.js';
 import { AppState } from '../core/state.js';
 import { Bus, Events } from '../core/events.js';
-import { fetchWeather, fetchAirQuality, fetchHistorical, weatherCodeToCondition, weatherCodeToDescription } from '../core/api.js';
-import { formatTemp, formatWind, formatPercent, formatPressure, formatRain, windDirection } from '../utils/format.js';
+import { fetchWeather, fetchPrecipitationNowcast, fetchAirQuality, fetchHistorical, weatherCodeToCondition, weatherCodeToDescription } from '../core/api.js';
+import { formatTemp, formatWind, formatPercent, formatPressure, windDirection } from '../utils/format.js';
 import { formatTime, formatDay, formatShort } from '../utils/date.js';
 import { Toast } from '../ui/toast.js';
 import { i18n } from '../ui/i18n.js';
@@ -26,9 +26,12 @@ const FARM_CROPS = {
 class WeatherModule {
     constructor() {
         this.data = null;
+        this.nowcast = null;
         this.aq = null;
         this.container = null;
         this.historyRequestId = 0;
+        this.hourlyFeelsLike = false;
+        this.forecastFeelsLike = false;
     }
 
     init() {
@@ -49,6 +52,25 @@ class WeatherModule {
         if (geoBtn) {
             geoBtn.addEventListener('click', () => this.useMyLocation());
         }
+
+        document.getElementById('hourlyFeelsLikeToggle')?.addEventListener('click', (event) => {
+            this.hourlyFeelsLike = !this.hourlyFeelsLike;
+            event.currentTarget.setAttribute('aria-pressed', String(this.hourlyFeelsLike));
+            if (this.data) {
+                const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
+                this.renderHourly(this.data.hourly, units === 'imperial' ? 'F' : 'C', this.data.daily);
+            }
+        });
+
+        document.getElementById('forecastFeelsLikeToggle')?.addEventListener('click', (event) => {
+            this.forecastFeelsLike = !this.forecastFeelsLike;
+            event.currentTarget.setAttribute('aria-pressed', String(this.forecastFeelsLike));
+            if (this.data) {
+                this.renderCharts(this.data, Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric') === 'imperial' ? 'F' : 'C');
+            }
+        });
+
+        window.setInterval(() => this.updateNowcastMessage(), 60 * 1000);
 
         const cropSelect = document.getElementById('farmCropSelect');
         if (cropSelect) {
@@ -206,12 +228,17 @@ class WeatherModule {
 
         try {
             const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
-            const [weather, aq] = await Promise.all([
+            const [weather, aq, nowcast] = await Promise.all([
                 fetchWeather(location.lat, location.lon, units, { refresh }),
-                fetchAirQuality(location.lat, location.lon, { refresh }).catch(() => null)
+                fetchAirQuality(location.lat, location.lon, { refresh }).catch(() => null),
+                fetchPrecipitationNowcast(location.lat, location.lon, units, { refresh }).catch(err => {
+                    console.warn('[Weather] 15-minute precipitation forecast unavailable:', err.message);
+                    return null;
+                })
             ]);
 
             this.data = weather;
+            this.nowcast = nowcast;
             this.aq = aq;
             this.location = location;
 
@@ -290,10 +317,11 @@ class WeatherModule {
 
         // Hero
         this.renderHero(cur, loc, tempUnit);
+        this.renderNowcast(this.nowcast, units);
         // Current card
         this.renderCurrentCard(cur, data, loc, tempUnit, units);
         // Hourly
-        this.renderHourly(data.hourly, tempUnit);
+        this.renderHourly(data.hourly, tempUnit, daily);
         // Daily
         this.renderDaily(daily, tempUnit);
         // Full forecast view
@@ -329,6 +357,127 @@ class WeatherModule {
         if (el('heroUpdated')) {
             el('heroUpdated').textContent = 'Just now';
         }
+    }
+
+    renderNowcast(nowcast, units) {
+        const timeline = document.getElementById('nowcastTimeline');
+        const source = document.getElementById('nowcastSource');
+        if (!timeline) return;
+
+        this.nowcastTimezone = nowcast?.timezone || undefined;
+        const time = nowcast?.minutely_15?.time;
+        const precipitation = nowcast?.minutely_15?.precipitation;
+        const offsetSeconds = Number(nowcast?.utc_offset_seconds || 0);
+        const startIndex = Array.isArray(time)
+            ? time.findIndex(value => this.parseForecastTimestamp(value, offsetSeconds) >= Date.now())
+            : -1;
+
+        if (!Array.isArray(time) || !Array.isArray(precipitation) || startIndex < 0) {
+            this.nowcastSteps = [];
+            timeline.innerHTML = '';
+            if (source) source.textContent = '';
+            const alert = document.getElementById('nowcastAlert');
+            if (alert) {
+                alert.className = 'nowcast-alert nowcast-unavailable';
+                alert.textContent = i18n.t('nowcast.unavailable');
+            }
+            return;
+        }
+
+        this.nowcastSteps = time.slice(startIndex, startIndex + 4).map((value, index) => ({
+            time: this.parseForecastTimestamp(value, offsetSeconds),
+            amount: Number(precipitation[startIndex + index])
+        })).filter(step => Number.isFinite(step.time) && Number.isFinite(step.amount));
+        this.nowcastPrecipUnit = nowcast.minutely_15_units?.precipitation || (units === 'imperial' ? 'inch' : 'mm');
+        if (source) source.textContent = i18n.t('nowcast.source');
+
+        timeline.innerHTML = this.nowcastSteps.map((step, index) => {
+            const amountPerHour = step.amount * 4;
+            const wetThreshold = this.nowcastPrecipUnit === 'inch' ? 0.001 : 0.02;
+            const intensity = step.amount < wetThreshold
+                ? 'dry'
+                : amountPerHour < (this.nowcastPrecipUnit === 'inch' ? 0.1 : 2.5)
+                    ? 'light'
+                    : amountPerHour < (this.nowcastPrecipUnit === 'inch' ? 0.3 : 7.5)
+                        ? 'moderate'
+                        : 'heavy';
+            const amount = this.nowcastPrecipUnit === 'inch'
+                ? `${step.amount.toFixed(3)} in`
+                : `${step.amount.toFixed(1)} mm`;
+            return `<div class="nowcast-step ${intensity}" title="${this.formatNowcastTime(step.time)} · ${amount}">
+                <span class="nowcast-step-label">${index === 0 ? 'Now' : this.formatNowcastTime(step.time)}</span>
+                <span class="nowcast-step-track"><i></i></span>
+                <span class="nowcast-step-amount">${amount}</span>
+            </div>`;
+        }).join('');
+
+        this.updateNowcastPlayhead();
+        this.updateNowcastMessage();
+    }
+
+    parseForecastTimestamp(value, offsetSeconds = Number(this.data?.utc_offset_seconds || 0)) {
+        const timestamp = String(value);
+        if (/[zZ]|[+-]\d{2}:\d{2}$/.test(timestamp)) return new Date(timestamp).getTime();
+        const match = timestamp.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/);
+        if (!match) return new Date(timestamp).getTime();
+        const [, year, month, day, hour, minute, second = '0'] = match;
+        return Date.UTC(Number(year), Number(month) - 1, Number(day), Number(hour), Number(minute), Number(second)) - offsetSeconds * 1000;
+    }
+
+    formatNowcastTime(timestamp) {
+        try {
+            return new Intl.DateTimeFormat(undefined, {
+                hour: 'numeric',
+                minute: '2-digit',
+                ...((this.nowcastTimezone || this.data?.timezone)
+                    ? { timeZone: this.nowcastTimezone || this.data.timezone }
+                    : {})
+            }).format(new Date(timestamp));
+        } catch (err) {
+            console.warn('[Weather] Could not format nowcast time zone:', err.message);
+            return formatTime(timestamp);
+        }
+    }
+
+    updateNowcastPlayhead() {
+        const track = document.querySelector('#nowcastTimeline .nowcast-step-track');
+        if (!track || !this.nowcastSteps?.length) return;
+        const interval = 15 * 60 * 1000;
+        const periodStart = this.nowcastSteps[0].time - interval;
+        const progress = Math.max(0, Math.min(100, ((Date.now() - periodStart) / interval) * 100));
+        track.style.setProperty('--nowcast-progress', `${progress}%`);
+    }
+
+    updateNowcastMessage() {
+        if (!this.nowcastSteps?.length) return;
+        this.updateNowcastPlayhead();
+        const alert = document.getElementById('nowcastAlert');
+        if (!alert) return;
+
+        const wetThreshold = this.nowcastPrecipUnit === 'inch' ? 0.001 : 0.02;
+        const now = Date.now();
+        const nextRain = this.nowcastSteps.find(step => step.time > now - 60_000 && step.amount >= wetThreshold);
+        if (!nextRain) {
+            alert.className = 'nowcast-alert nowcast-dry';
+            alert.innerHTML = `<i class="fas fa-cloud-sun" aria-hidden="true"></i><span>${i18n.t('nowcast.dry')}</span>`;
+            return;
+        }
+
+        const minutes = Math.max(0, Math.ceil((nextRain.time - now) / 60_000));
+        const rainIndex = this.nowcastSteps.indexOf(nextRain);
+        const stopIndex = this.nowcastSteps.findIndex((step, index) =>
+            index > rainIndex && step.amount < wetThreshold
+        );
+        const stopMinutes = stopIndex > rainIndex
+            ? Math.max(15, Math.ceil((this.nowcastSteps[stopIndex].time - now) / 60_000))
+            : null;
+        const message = rainIndex === 0 && minutes <= 1 && stopMinutes
+            ? i18n.t('nowcast.rainEnding', { minutes: stopMinutes })
+            : minutes <= 1
+                ? i18n.t('nowcast.rainNow')
+                : i18n.t('nowcast.rainIn', { minutes });
+        alert.className = 'nowcast-alert nowcast-rain';
+        alert.innerHTML = `<i class="fas fa-cloud-rain" aria-hidden="true"></i><span>${this.esc(message)}</span>`;
     }
 
     renderCurrentCard(cur, data, loc, tempUnit, units) {
@@ -372,6 +521,7 @@ class WeatherModule {
                                 <div style="font-size:0.75rem;color:var(--text-muted)">${i18n.t('current.wind')}</div>
                                 <div><strong>${formatWind(cur.wind_speed_10m, units)}</strong>
                                 <span style="font-size:0.8rem">${windDirection(cur.wind_direction_10m)}</span></div>
+                                <div style="font-size:0.75rem;color:var(--text-muted)">${i18n.t('forecast.gusts')}: ${formatWind(cur.wind_gusts_10m, units)}</div>
                             </div>
                         </div>
                         <div class="weather-detail">
@@ -395,6 +545,16 @@ class WeatherModule {
                                 <div><strong>${Math.round(cur.cloud_cover || 0)}%</strong></div>
                             </div>
                         </div>
+                        ${cur.visibility != null && Number.isFinite(Number(cur.visibility)) ? `
+                        <div class="weather-detail">
+                            <i class="fas fa-eye"></i>
+                            <div>
+                                <div style="font-size:0.75rem;color:var(--text-muted)">${i18n.t('current.visibility')}</div>
+                                <div><strong>${units === 'imperial'
+                                    ? `${(cur.visibility / 1609.344).toFixed(1)} mi`
+                                    : `${(cur.visibility / 1000).toFixed(1)} km`}</strong></div>
+                            </div>
+                        </div>` : ''}
                         <div class="weather-detail">
                             <i class="fas fa-sun"></i>
                             <div>
@@ -415,33 +575,78 @@ class WeatherModule {
         `;
     }
 
-    renderHourly(hourly, tempUnit) {
+    renderHourly(hourly, tempUnit, daily) {
         const container = document.getElementById('hourlyForecast');
         if (!container) return;
 
         // Next 24 hours
         const now = new Date();
-        const startIdx = Math.max(0, hourly.time.findIndex(t => new Date(t) >= now));
+        const foundStartIdx = hourly.time.findIndex(t =>
+            this.parseForecastTimestamp(t) >= now.getTime()
+        );
+        const startIdx = foundStartIdx < 0
+            ? Math.max(0, hourly.time.length - 1)
+            : foundStartIdx;
         const slice = hourly.time.slice(startIdx, startIdx + 24);
+        const firstTime = this.parseForecastTimestamp(slice[0]);
+        const lastTime = this.parseForecastTimestamp(slice[slice.length - 1]);
+        const windUnits = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
+        const gustThreshold = windUnits === 'imperial' ? 25 : 40;
+        const sunEvents = (daily?.time || []).flatMap((date, index) =>
+            ['sunrise', 'sunset'].map(type => ({
+                type,
+                time: daily[type]?.[index],
+                label: type === 'sunrise' ? i18n.t('forecast.sunrise') : i18n.t('forecast.sunset')
+            }))
+        ).filter(event => {
+            const time = this.parseForecastTimestamp(event.time);
+            return Number.isFinite(time) && time >= firstTime && time <= lastTime;
+        }).sort((a, b) => this.parseForecastTimestamp(a.time) - this.parseForecastTimestamp(b.time));
+        let nextSunEvent = 0;
 
         container.innerHTML = slice.map((t, i) => {
             const idx = startIdx + i;
-            const d = new Date(t);
-            const temp = Math.round(hourly.temperature_2m[idx]);
+            const forecastTime = this.parseForecastTimestamp(t);
+            const tempValues = this.hourlyFeelsLike && Array.isArray(hourly.apparent_temperature)
+                ? hourly.apparent_temperature
+                : hourly.temperature_2m;
+            const temp = Math.round(tempValues[idx]);
             const code = hourly.weather_code[idx];
             const pop = Math.round(hourly.precipitation_probability?.[idx] ?? 0);
             const cond = weatherCodeToCondition(code);
             const isDay = hourly.is_day?.[idx] === 1;
             const icon = this.weatherIcon(cond, isDay);
+            const wind = Number(hourly.wind_speed_10m?.[idx]);
+            const gust = Number(hourly.wind_gusts_10m?.[idx]);
+            const direction = Number(hourly.wind_direction_10m?.[idx]);
 
-            const label = i === 0 ? 'Now' : formatTime(d);
+            const label = i === 0 ? 'Now' : this.formatNowcastTime(forecastTime);
+            let marker = '';
+            while (nextSunEvent < sunEvents.length &&
+                this.parseForecastTimestamp(sunEvents[nextSunEvent].time) <= forecastTime) {
+                const event = sunEvents[nextSunEvent++];
+                const eventTime = this.parseForecastTimestamp(event.time);
+                marker += `<div class="hourly-sun-marker ${event.type}" aria-label="${event.label} ${this.formatNowcastTime(eventTime)}">
+                    <i class="fas ${event.type === 'sunrise' ? 'fa-sun' : 'fa-moon'}" aria-hidden="true"></i>
+                    <span>${event.label}</span>
+                    <strong>${this.formatNowcastTime(eventTime)}</strong>
+                </div>`;
+            }
 
             return `
+                ${marker}
                 <div class="hourly-item">
                     <div class="hourly-time">${label}</div>
                     <div class="hourly-icon"><i class="${icon}"></i></div>
                     <div class="hourly-temp">${temp}°${tempUnit}</div>
-                    ${pop > 10 ? `<div class="hourly-precip"><i class="fas fa-droplet"></i> ${pop}%</div>` : ''}
+                    <div class="hourly-precip"><i class="fas fa-droplet"></i> ${pop}%</div>
+                    <div class="hourly-precip-track" role="img" aria-label="${i18n.t('forecast.rainChance')}: ${pop}%">
+                        <span style="height:${pop}%"></span>
+                    </div>
+                    ${Number.isFinite(direction) ? `<div class="hourly-wind">
+                        <i class="fas fa-arrow-up" style="transform:rotate(${direction}deg)" aria-label="${this.esc(windDirection(direction))}"></i>
+                        <span class="${Number.isFinite(gust) && gust >= gustThreshold ? 'wind-strong' : ''}">${Number.isFinite(wind) ? this.esc(formatWind(wind, windUnits)) : '--'}</span>
+                    </div>` : ''}
                 </div>
             `;
         }).join('');
@@ -460,7 +665,11 @@ class WeatherModule {
             const lo = Math.round(daily.temperature_2m_min[i]);
             const pop = Math.round(daily.precipitation_probability_max?.[i] ?? 0);
 
-            const dayLabel = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : formatDay(d);
+            const dayLabel = i === 0
+                ? i18n.t('forecast.today')
+                : i === 1
+                    ? i18n.t('forecast.tomorrow')
+                    : formatDay(d);
 
             return `
                 <div class="daily-item">
@@ -488,15 +697,30 @@ class WeatherModule {
             const pop = Math.round(daily.precipitation_probability_max?.[i] ?? 0);
             const rain = daily.precipitation_sum?.[i] ?? 0;
 
+            const apparentHigh = daily.apparent_temperature_max?.[i];
+            const apparentLow = daily.apparent_temperature_min?.[i];
+            const windSpeed = daily.wind_speed_10m_max?.[i];
+            const windBearing = daily.wind_direction_10m_dominant?.[i];
+            const units = Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric');
+            const rainAmount = units === 'imperial' ? `${Number(rain).toFixed(2)} in` : `${Number(rain).toFixed(1)} mm`;
+
             return `
-                <div class="daily-item">
-                    <div class="daily-day">${i === 0 ? 'Today' : formatDay(d)}</div>
-                    <div class="daily-date">${formatShort(d)}</div>
-                    <div class="daily-icon"><i class="${icon}"></i></div>
-                    <div class="daily-temp-high">${hi}°${tempUnit} / <span style="font-size:0.8rem;color:var(--text-muted)">${lo}°${tempUnit}</span></div>
-                    ${pop > 10 ? `<div class="daily-precip"><i class="fas fa-droplet"></i> ${pop}%</div>` : ''}
-                    ${rain > 0.1 ? `<div style="font-size:0.75rem;color:var(--primary)">${formatRain(rain)}</div>` : ''}
-                </div>
+                <details class="daily-item forecast-expandable">
+                    <summary class="forecast-day-summary">
+                        <span class="daily-day">${i === 0 ? i18n.t('forecast.today') : formatDay(d)}</span>
+                        <span class="daily-date">${formatShort(d)}</span>
+                        <span class="daily-icon"><i class="${icon}" aria-hidden="true"></i></span>
+                        <span class="daily-temp-high">${hi}°${tempUnit}</span>
+                        <span class="daily-temp-low">${lo}°${tempUnit}</span>
+                        ${pop > 0 ? `<span class="daily-precip"><i class="fas fa-droplet" aria-hidden="true"></i> ${pop}%</span>` : ''}
+                        <i class="fas fa-chevron-down forecast-day-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="forecast-day-details">
+                        <span>${i18n.t('forecast.feelsLike')}: ${Number.isFinite(apparentHigh) ? `${Math.round(apparentHigh)}°${tempUnit}` : '—'} / ${Number.isFinite(apparentLow) ? `${Math.round(apparentLow)}°${tempUnit}` : '—'}</span>
+                        <span>${i18n.t('forecast.wind')}: ${Number.isFinite(windSpeed) ? formatWind(windSpeed, Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric')) : '—'}${Number.isFinite(windBearing) ? ` ${windDirection(windBearing)}` : ''}</span>
+                        <span>${i18n.t('forecast.precip')}: ${rain > 0 ? rainAmount : `0 ${units === 'imperial' ? 'in' : 'mm'}`} · ${i18n.t('forecast.rainChance')}: ${pop}%</span>
+                    </div>
+                </details>
             `;
         }).join('');
     }
@@ -524,13 +748,35 @@ class WeatherModule {
         if (tempCtx) {
             if (this._tempChart) this._tempChart.destroy();
             const daily = data.daily;
+            const feelsLikeDatasets = [
+                {
+                    label: `${i18n.t('forecast.feelsLikeTemperature')} high (°${tempUnit})`,
+                    data: daily.apparent_temperature_max,
+                    borderColor: '#dc6a35',
+                    borderDash: [6, 4],
+                    fill: false,
+                    tension: 0.35,
+                    pointRadius: 3,
+                    hidden: !this.forecastFeelsLike
+                },
+                {
+                    label: `${i18n.t('forecast.feelsLikeTemperature')} low (°${tempUnit})`,
+                    data: daily.apparent_temperature_min,
+                    borderColor: '#5686b5',
+                    borderDash: [6, 4],
+                    fill: false,
+                    tension: 0.35,
+                    pointRadius: 3,
+                    hidden: !this.forecastFeelsLike
+                }
+            ];
             this._tempChart = new Chart(tempCtx, {
                 type: 'line',
                 data: {
                     labels: daily.time.map(t => formatShort(t)),
                     datasets: [
                         {
-                            label: `High (°${tempUnit})`,
+                            label: `${i18n.t('forecast.high')} (°${tempUnit})`,
                             data: daily.temperature_2m_max,
                             borderColor: '#ff6b01',
                             backgroundColor: 'rgba(255,107,1,0.12)',
@@ -540,15 +786,16 @@ class WeatherModule {
                             pointBackgroundColor: '#ff6b01'
                         },
                         {
-                            label: `Low (°${tempUnit})`,
+                            label: `${i18n.t('forecast.low')} (°${tempUnit})`,
                             data: daily.temperature_2m_min,
                             borderColor: '#4a9eff',
-                            backgroundColor: 'rgba(74,158,255,0.12)',
-                            fill: true,
+                            backgroundColor: 'rgba(74,158,255,0.08)',
+                            fill: false,
                             tension: 0.4,
                             pointRadius: 5,
                             pointBackgroundColor: '#4a9eff'
-                        }
+                        },
+                        ...feelsLikeDatasets
                     ]
                 },
                 options: {
@@ -556,6 +803,40 @@ class WeatherModule {
                     maintainAspectRatio: false,
                     plugins: { legend: { position: 'bottom' } },
                     scales: { y: { beginAtZero: false } }
+                }
+            });
+        }
+
+        const precipitationCtx = document.getElementById('precipitationChart');
+        if (precipitationCtx) {
+            if (this._precipitationChart) this._precipitationChart.destroy();
+            this._precipitationChart = new Chart(precipitationCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.daily.time.map(t => formatShort(t)),
+                    datasets: [{
+                        label: i18n.t('forecast.rainfall'),
+                        data: data.daily.precipitation_sum,
+                        backgroundColor: 'rgba(26, 115, 232, 0.68)',
+                        borderColor: '#1a73e8',
+                        borderWidth: 1,
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: context => `${Number(context.raw || 0).toFixed(1)} ${data.daily_units?.precipitation_sum || 'mm'}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: data.daily_units?.precipitation_sum || 'mm' } }
+                    }
                 }
             });
         }
@@ -595,6 +876,7 @@ class WeatherModule {
 
     resizeCharts() {
         this._tempChart?.resize();
+        this._precipitationChart?.resize();
         this._humChart?.resize();
         this._climateChart?.resize();
     }

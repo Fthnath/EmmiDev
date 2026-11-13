@@ -44,7 +44,27 @@
     "tomorrow": "Tomorrow",
     "high": "High",
     "low": "Low",
-    "precip": "Precipitation"
+    "precip": "Precipitation",
+    "feelsLike": "Feels like",
+    "rainfall": "Daily Rainfall",
+    "rainChance": "Rain chance",
+    "wind": "Wind",
+    "gusts": "Gusts",
+    "sunrise": "Sunrise",
+    "sunset": "Sunset",
+    "feelsLikeTemperature": "Feels-like temperature"
+  },
+  "nowcast": {
+    "title": "Next hour",
+    "source": "15-minute forecast",
+    "light": "Light",
+    "moderate": "Moderate",
+    "heavy": "Heavy",
+    "rainIn": "Rain expected in about {minutes} min",
+    "rainNow": "Rain is expected now",
+    "rainEnding": "Rain may stop in about {minutes} min",
+    "dry": "No rain expected in the next hour",
+    "unavailable": "15-minute rain forecast is unavailable for this location"
   },
   "lifestyle": {
     "title": "Lifestyle Recommendations",
