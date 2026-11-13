@@ -9,7 +9,6 @@ const APP_SHELL = [
     './index.html',
     './manifest.json',
     './weather-icon.svg',
-    './walking_boy.gif',
     './favicon/favicon-16x16.png',
     './favicon/favicon-32x32.png',
     './favicon/favicon-96x96.png',

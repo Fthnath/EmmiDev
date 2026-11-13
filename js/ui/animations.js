@@ -3,7 +3,6 @@
  * Canvas-based, 60fps, weather-reactive scenes.
  *
  * Features:
- *   - Animated walking character sprites
  *   - Rain with splash + puddles + lightning
  *   - Sun with rays + heat shimmer
  *   - Drifting clouds (layered)
@@ -44,9 +43,6 @@ export class WeatherScene {
         
         this.clouds = [];
         this.trees = [];
-        this.persons = [];
-        this.walkerImage = new Image();
-        this.walkerImage.src = new URL('../../walking_boy.gif', import.meta.url).href;
         this.lightning = { active: false, flash: 0, next: 0 };
         
         this._boundAnimate = this._animate.bind(this);
@@ -93,7 +89,6 @@ export class WeatherScene {
     _rebuildScene() {
         this._initClouds();
         this._initTrees();
-        this._initPersons();
         this._initParticles();
         this._initBirds();
         this._initStars();
@@ -130,20 +125,6 @@ export class WeatherScene {
                 width: 30 + Math.random() * 20,
                 sway: Math.random() * Math.PI * 2,
                 swayAmp: 0.02 + Math.random() * 0.03
-            });
-        }
-    }
-    
-    _initPersons() {
-        this.persons = [];
-        // Keep varied scales to preserve the scene's sense of depth.
-        for (let i = 0; i < 3; i++) {
-            const depth = i / 2;
-            this.persons.push({
-                x: Math.random() * this.width,
-                speed: 0.3 + Math.random() * 0.4,
-                scale: 0.7 + depth * 0.6,
-                y: this.groundY + depth * 20
             });
         }
     }
@@ -309,20 +290,17 @@ export class WeatherScene {
         // 8. Puddles (rain)
         if (this.particles.puddles.length) this._drawPuddles();
         
-        // 9. Walking character sprites
-        this._drawPersons();
-        
-        // 10. Weather particles (rain/snow/leaves/dust)
+        // 9. Weather particles (rain/snow/leaves/dust)
         this._drawRain();
         this._drawSnow();
         this._drawLeaves();
         this._drawDust();
         this._drawSplash();
         
-        // 11. Lightning flash (storm)
+        // 10. Lightning flash (storm)
         if (this.condition === 'thunderstorm') this._drawLightning();
         
-        // 12. Heat shimmer (very hot day)
+        // 11. Heat shimmer (very hot day)
         if (this.isDay && this.temperature > 32) this._drawHeatShimmer();
     }
     
@@ -558,34 +536,6 @@ export class WeatherScene {
             
             ctx.restore();
         });
-    }
-    
-    _drawPersons() {
-        // Sort by scale so far ones draw first
-        const sorted = [...this.persons].sort((a, b) => a.scale - b.scale);
-        
-        sorted.forEach(p => {
-            // Walking motion
-            const dx = p.speed * (this.windSpeed > 15 ? 1.4 : 1);
-            p.x += dx;
-            if (p.x > this.width + 40) {
-                p.x = -40;
-                p.y = this.groundY + (p.scale - 0.7) * 20;
-            }
-            this._drawWalker(p.x, p.y, p.scale);
-        });
-    }
-
-    _drawWalker(x, y, scale) {
-        if (!this.walkerImage.complete || !this.walkerImage.naturalWidth) return;
-
-        const size = 110 * scale;
-        const ctx = this.ctx;
-        ctx.save();
-        ctx.translate(x, y - size);
-        ctx.scale(-1, 1);
-        ctx.drawImage(this.walkerImage, -size / 2, 0, size, size);
-        ctx.restore();
     }
     
     /**

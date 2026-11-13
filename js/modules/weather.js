@@ -318,7 +318,7 @@ class WeatherModule {
                 : 'Unknown';
         }
         if (el('heroFeelsLike')) {
-            el('heroFeelsLike').textContent = `Feels ${Math.round(cur.apparent_temperature)}°`;
+            el('heroFeelsLike').textContent = `${Math.round(cur.apparent_temperature)}°${tempUnit}`;
         }
         if (el('heroWind')) {
             el('heroWind').textContent = formatWind(cur.wind_speed_10m, Storage.get(CONFIG.STORAGE_KEYS.UNITS, 'metric'));
@@ -327,7 +327,7 @@ class WeatherModule {
             el('heroHumidity').textContent = `${Math.round(cur.relative_humidity_2m)}%`;
         }
         if (el('heroUpdated')) {
-            el('heroUpdated').textContent = 'Updated now';
+            el('heroUpdated').textContent = 'Just now';
         }
     }
 
